@@ -1,9 +1,9 @@
 // Modify the attributes declaration to export it
 export const attributes = [
-    { id: 'attack', name: 'Attack Boost', icon: './resources/attack_icon.png' },
-    { id: 'affinity', name: 'Affinity Boost', icon: './resources/affinity_icon.png' },
-    { id: 'element', name: 'Element Boost', icon: './resources/element_icon.png' },
-    { id: 'sharpness', name: 'Sharpness Boost', icon: './resources/sharpness_icon.webp' },
+    { id: 'attack', name: 'Attack Boost', icon: './src/resources/attack_icon.png' },
+    { id: 'affinity', name: 'Affinity Boost', icon: './src/resources/affinity_icon.png' },
+    { id: 'element', name: 'Element Boost', icon: './src/resources/element_icon.png' },
+    { id: 'sharpness', name: 'Sharpness Boost', icon: './src/resources/sharpness_icon.webp' },
 ];
 
 document.addEventListener('DOMContentLoaded', () => {

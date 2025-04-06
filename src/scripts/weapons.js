@@ -1,18 +1,18 @@
 const weapons = [
-    { id: 'bow', name: 'Bow', icon: './resources/bow_icon.webp' },
-    { id: 'charge-blade', name: 'Charge Blade', icon: './resources/charge_blade_icon.webp' },
-    { id: 'dual-blades', name: 'Dual Blades', icon: './resources/dual_blades_icon.webp' },
-    { id: 'greatsword', name: 'Great Sword', icon: './resources/great_sword_icon_light.webp' },
-    { id: 'gunlance', name: 'Gunlance', icon: './resources/gunlance_icon.webp' },
-    { id: 'hammer', name: 'Hammer', icon: './resources/hammer_icon.webp' },
-    { id: 'heavy-bowgun', name: 'Heavy Bowgun', icon: './resources/heavy_bowgun_icon.webp' },
-    { id: 'hunting-horn', name: 'Hunting Horn', icon: './resources/hunting_horn_icon.webp' },
-    { id: 'insect-glaive', name: 'Insect Glaive', icon: './resources/insect_glaive_icon.webp' },
-    { id: 'lance', name: 'Lance', icon: './resources/lance_icon.webp' },
-    { id: 'light-bowgun', name: 'Light Bowgun', icon: './resources/light_bowgun_icon.webp' },
-    { id: 'long-sword', name: 'Long Sword', icon: './resources/long_sword_icon.webp' },
-    { id: 'switch-axe', name: 'Switch Axe', icon: './resources/switch_axe_icon.webp' },
-    { id: 'sword-and-shield', name: 'Sword & Shield', icon: './resources/sword_and_shield_icon.webp' }
+    { id: 'bow', name: 'Bow', icon: './src/resources/bow_icon.webp' },
+    { id: 'charge-blade', name: 'Charge Blade', icon: './src/resources/charge_blade_icon.webp' },
+    { id: 'dual-blades', name: 'Dual Blades', icon: './src/resources/dual_blades_icon.webp' },
+    { id: 'greatsword', name: 'Great Sword', icon: './src/resources/great_sword_icon_light.webp' },
+    { id: 'gunlance', name: 'Gunlance', icon: './src/resources/gunlance_icon.webp' },
+    { id: 'hammer', name: 'Hammer', icon: './src/resources/hammer_icon.webp' },
+    { id: 'heavy-bowgun', name: 'Heavy Bowgun', icon: './src/resources/heavy_bowgun_icon.webp' },
+    { id: 'hunting-horn', name: 'Hunting Horn', icon: './src/resources/hunting_horn_icon.webp' },
+    { id: 'insect-glaive', name: 'Insect Glaive', icon: './src/resources/insect_glaive_icon.webp' },
+    { id: 'lance', name: 'Lance', icon: './src/resources/lance_icon.webp' },
+    { id: 'light-bowgun', name: 'Light Bowgun', icon: './src/resources/light_bowgun_icon.webp' },
+    { id: 'long-sword', name: 'Long Sword', icon: './src/resources/long_sword_icon.webp' },
+    { id: 'switch-axe', name: 'Switch Axe', icon: './src/resources/switch_axe_icon.webp' },
+    { id: 'sword-and-shield', name: 'Sword & Shield', icon: './src/resources/sword_and_shield_icon.webp' }
 ];
 
 
