@@ -228,7 +228,7 @@ tr:last-child td {
     content: '×';
     position: absolute;
     right: 8px;
-    opacity: 0.3;
+    opacity: 0.8;
 }
 
 .number-cell.delete-mode {
