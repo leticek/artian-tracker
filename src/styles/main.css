@@ -244,3 +244,86 @@ tr:last-child td {
 .delete-btn {
     display: none;
 }
+
+/* Add these styles at the end of the file */
+
+#danger-zone {
+    margin-top: 2rem;
+    padding: 2rem;
+    border-top: 1px solid #ddd;
+}
+
+.danger-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.danger-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    border: 2px solid #dc3545;
+    color: #dc3545;
+}
+
+.danger-btn:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.danger-btn-critical {
+    border-color: #721c24;
+    color: #721c24;
+}
+
+.danger-btn-critical:hover {
+    background-color: #721c24;
+}
+
+.danger-btn-critical.confirm {
+    animation: pulse 1.5s infinite;
+}
+
+.danger-btn.error {
+    animation: shake 0.5s ease-in-out;
+    background-color: #ffebee;
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.danger-btn.confirm {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.danger-btn.confirm:hover {
+    background-color: #ffc107;
+    color: #000;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
