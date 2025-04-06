@@ -12,11 +12,9 @@ document.addEventListener('weaponSelected', (event) => {
     loadWeaponRolls();
 });
 
-// Add this event listener after the weaponSelected listener
+// Replace the entire attributeSelected event listener
 document.addEventListener('attributeSelected', (event) => {
     const attribute = event.detail;
-    console.log("Attribute selected:", attribute);
-    console.log("Current roll:", currentRoll);
     if (!selectedWeapon) {
         alert('Please select a weapon first');
         return;
@@ -24,21 +22,38 @@ document.addEventListener('attributeSelected', (event) => {
 
     // If a cell is selected, update it
     if (selectedAttributeCell) {
-        selectedAttributeCell.textContent = attribute.id;
+        const rollNumber = parseInt(selectedAttributeCell.dataset.roll);
+        const position = parseInt(selectedAttributeCell.dataset.position);
+        
+        // Handle the current incomplete roll differently
+        if (rollNumber === currentRoll.number) {
+            currentRoll.attributes[position] = attribute.id;
+            // Only save to localStorage if it's a complete roll
+            if (currentRoll.attributes.length === 5) {
+                saveRoll();
+                currentRoll = {
+                    number: currentRoll.number + 1,
+                    attributes: []
+                };
+            }
+        } else {
+            // Handle completed rolls in localStorage
+            const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
+            const roll = rolls.find(r => r.number === rollNumber);
+            
+            if (roll) {
+                roll.attributes[position] = attribute.id;
+                localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
+            }
+        }
+        
         selectedAttributeCell.classList.remove('selected');
-        
-        // Update in localStorage
-        updateRollInStorage(
-            parseInt(selectedAttributeCell.dataset.roll),
-            parseInt(selectedAttributeCell.dataset.position),
-            attribute.id
-        );
-        
         selectedAttributeCell = null;
+        updateDisplay();
         return;
     }
 
-    // Otherwise handle as a new attribute
+    // Add new attribute to current roll
     if (currentRoll.attributes.length < 5) {
         currentRoll.attributes.push(attribute.id);
         
@@ -50,7 +65,6 @@ document.addEventListener('attributeSelected', (event) => {
             };
         }
         
-        // Update the display with both saved rolls and current roll
         updateDisplay();
     }
 });
