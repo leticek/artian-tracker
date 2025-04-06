@@ -141,3 +141,12 @@ tr:hover {
     margin-left: 1rem;  
     white-space: nowrap; 
 }
+
+.attribute-cell {
+    cursor: pointer;
+}
+
+.attribute-cell.selected {
+    background-color: #e8f5e9;
+    border: 2px solid #4CAF50;
+}

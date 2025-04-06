@@ -46,7 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Add selected class to clicked button
             button.classList.add('selected');
-            selectedWeapon = weapon;
+            // Dispatch a custom event instead of using global variable
+            const event = new CustomEvent('weaponSelected', { detail: weapon });
+            document.dispatchEvent(event);
         });
 
         weaponButtonsContainer.appendChild(button);

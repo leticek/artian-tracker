@@ -5,18 +5,14 @@ const attributes = [
     { id: 'sharpness', name: 'Sharpness Boost', icon: './resources/sharpness_icon.webp' },
 ];
 
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Content Loaded");
-    
     const attributeButtonsContainer = document.getElementById('attribute-buttons');
-    console.log("Container found:", attributeButtonsContainer);
 
     attributes.forEach(attribute => {
-        console.log("Creating button for:", attribute.name);
         const button = document.createElement('button');
         button.className = 'attribute-btn';
-        button.setAttribute('data-attributr-id', attribute.id);
+        // Fix typo in attribute name
+        button.setAttribute('data-attribute-id', attribute.id);
         
         button.innerHTML = `
             <img src="${attribute.icon}" alt="${attribute.name}" onerror="console.error('Failed to load image: ${attribute.icon}')">
@@ -31,7 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Add selected class to clicked button
             button.classList.add('selected');
-            selectedAttribute = attribute;
+
+            // Dispatch attribute selection event
+            const event = new CustomEvent('attributeSelected', { 
+                detail: attribute 
+            });
+            document.dispatchEvent(event);
         });
 
         attributeButtonsContainer.appendChild(button);
