@@ -15,8 +15,14 @@ document.addEventListener('weaponSelected', (event) => {
 // Replace the entire attributeSelected event listener
 document.addEventListener('attributeSelected', (event) => {
     const attribute = event.detail;
+    const clickedButton = document.querySelector(`.attribute-btn[data-attribute-id="${attribute.id}"]`);
+    
     if (!selectedWeapon) {
-        alert('Please select a weapon first');
+        clickedButton.classList.add('error');
+        // Remove the error class after animation completes
+        setTimeout(() => {
+            clickedButton.classList.remove('error');
+        }, 500);
         return;
     }
 

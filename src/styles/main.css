@@ -150,3 +150,25 @@ tr:hover {
     background-color: #e8f5e9;
     border: 2px solid #4CAF50;
 }
+
+@keyframes pulseRed {
+    0% {
+        border-color: #ff0000;
+        background: #ffebee;
+        transform: scale(1);
+    }
+    50% {
+        border-color: #ff0000;
+        background: #ffcdd2;
+        transform: scale(1.05);
+    }
+    100% {
+        border-color: #ff0000;
+        background: #ffebee;
+        transform: scale(1);
+    }
+}
+
+.attribute-btn.error {
+    animation: pulseRed 0.5s ease-in-out;
+}
