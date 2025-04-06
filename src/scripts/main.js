@@ -298,7 +298,16 @@ document.getElementById('delete-all').addEventListener('click', function() {
             attributes: []
         };
         selectedWeapon = null;
-        updateDisplay();
+
+        // Reset all weapon button selections
+        document.querySelectorAll('.weapon-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+
+        // Clear the table
+        const tbody = document.getElementById('rolls-body');
+        tbody.innerHTML = '';
+
         this.classList.remove('confirm');
         this.textContent = 'Delete All Data';
         if (deleteAllClickTimeout) {
