@@ -34,9 +34,9 @@ document.addEventListener('attributeSelected', (event) => {
         // Handle the current incomplete roll differently
         if (rollNumber === currentRoll.number) {
             currentRoll.attributes[position] = attribute.id;
-            // Only save to localStorage if it's a complete roll
+            saveIncompleteRoll(); // Save immediately
+            // Only reset current roll if it's complete
             if (currentRoll.attributes.length === 5) {
-                saveRoll();
                 currentRoll = {
                     number: currentRoll.number + 1,
                     attributes: []
@@ -62,9 +62,9 @@ document.addEventListener('attributeSelected', (event) => {
     // Add new attribute to current roll
     if (currentRoll.attributes.length < 5) {
         currentRoll.attributes.push(attribute.id);
+        saveIncompleteRoll(); // Save immediately
         
         if (currentRoll.attributes.length === 5) {
-            saveRoll();
             currentRoll = {
                 number: currentRoll.number + 1,
                 attributes: []
@@ -77,16 +77,18 @@ document.addEventListener('attributeSelected', (event) => {
 
 // Add this new function to handle display updates
 function updateDisplay() {
+    if (!selectedWeapon) return;
+    
     const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
     const tbody = document.getElementById('rolls-body');
     tbody.innerHTML = '';
     
-    // Display saved rolls
-    rolls.forEach(roll => {
+    // Display completed rolls
+    rolls.filter(roll => roll.attributes.length === 5).forEach(roll => {
         tbody.appendChild(createRollRow(roll));
     });
     
-    // Display current incomplete roll if it has attributes
+    // Display current incomplete roll
     if (currentRoll.attributes.length > 0) {
         tbody.appendChild(createRollRow(currentRoll));
     }
@@ -96,10 +98,18 @@ function loadWeaponRolls() {
     if (!selectedWeapon) return;
     
     const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-    currentRoll = {
-        number: (rolls.length > 0 ? rolls[rolls.length - 1].number + 1 : 1),
-        attributes: []
-    };
+    
+    // Find incomplete roll if it exists
+    const incompleteRoll = rolls.find(r => r.attributes.length < 5);
+    
+    if (incompleteRoll) {
+        currentRoll = incompleteRoll;
+    } else {
+        currentRoll = {
+            number: (rolls.length > 0 ? rolls[rolls.length - 1].number + 1 : 1),
+            attributes: []
+        };
+    }
     
     updateDisplay();
 }
@@ -114,7 +124,7 @@ function createRollRow(roll) {
             </td>
         `).join('')}
     `;
-
+    
     // Add click listeners to attribute cells
     row.querySelectorAll('.attribute-cell').forEach(cell => {
         cell.addEventListener('click', () => {
@@ -125,26 +135,36 @@ function createRollRow(roll) {
             selectedAttributeCell = cell;
         });
     });
-
+    
     return row;
 }
 
 function saveRoll() {
-    if (!selectedWeapon) return;
-    
     const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
     rolls.push(currentRoll);
     localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
 }
 
 function updateRollInStorage(rollNumber, position, attribute) {
-    if (!selectedWeapon) return;
-    
     const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
     const roll = rolls.find(r => r.number === rollNumber);
-    
     if (roll) {
         roll.attributes[position] = attribute;
         localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
     }
+}
+
+function saveIncompleteRoll() {
+    if (!selectedWeapon || !currentRoll.attributes.length) return;
+    
+    const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
+    const existingRollIndex = rolls.findIndex(r => r.number === currentRoll.number);
+    
+    if (existingRollIndex >= 0) {
+        rolls[existingRollIndex] = currentRoll;
+    } else {
+        rolls.push(currentRoll);
+    }
+    
+    localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
 }
