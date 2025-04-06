@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weapon Roll Tracker</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+    <header>
+        <h1>Weapon Roll Tracker</h1>
+    </header>
+    <main>
+        <section id="weapon-selection">
+            <div id="weapon-buttons" class="weapon-grid">
+            </div>
+        </section>
+        <section id="attribute-selection">
+            <div id="attribute-buttons">
+                <!-- Attribute buttons will be populated here -->
+            </div>
+        </section>
+        <section id="rolls-table">
+            <h2>Past Rolls</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Num.</th>
+                        <th>Attribute 1</th>
+                        <th>Attribute 2</th>
+                        <th>Attribute 3</th>
+                        <th>Attribute 4</th>
+                        <th>Attribute 5</th>
+                    </tr>
+                </thead>
+                <tbody id="rolls-body">
+                    <!-- Selected rolls will be displayed here -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <!-- Add script files -->
+    <script type="module" src="./scripts/weapons.js"></script>
+    <script type="module" src="./scripts/attributes.js"></script>
+    <script type="module" src="./scripts/main.js"></script>
+</body>
+</html>

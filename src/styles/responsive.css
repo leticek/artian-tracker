@@ -1,0 +1,83 @@
+/* Responsive styles for the weapon roll tracker website */
+
+/* Mobile styles */
+@media (max-width: 600px) {
+    body {
+        font-size: 14px;
+    }
+
+    .weapon-button, .attribute-button {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    table {
+        width: 100%;
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    #weapon-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 601px) and (max-width: 900px) {
+    body {
+        font-size: 16px;
+    }
+
+    .weapon-button, .attribute-button {
+        width: 48%;
+        margin: 1%;
+    }
+
+    table {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    #weapon-buttons {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Desktop styles */
+@media (min-width: 901px) {
+    body {
+        font-size: 18px;
+    }
+
+    .weapon-button, .attribute-button {
+        width: auto;
+        margin: 10px;
+    }
+
+    table {
+        width: 80%;
+        margin: auto;
+        font-size: 16px;
+    }
+
+    th, td {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 1024px) {
+    #weapon-buttons {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
