@@ -142,22 +142,14 @@ function createRollRow(roll) {
     // Add the roll number cell
     const numberCell = document.createElement('td');
     numberCell.className = 'number-cell';
-    
-    const numberSpan = document.createElement('span');
-    numberSpan.textContent = roll.number;
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.style.display = 'none';
-    
-    numberCell.appendChild(numberSpan);
-    numberCell.appendChild(deleteBtn);
+    numberCell.textContent = roll.number;
     
     // Add click handler for the number cell
     numberCell.addEventListener('click', (e) => {
-        if (e.target === deleteBtn) {
-            // Handle delete
+        const allNumberCells = document.querySelectorAll('.number-cell');
+        
+        if (numberCell.classList.contains('delete-mode')) {
+            // Delete the roll
             const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
             
             // If this is the current incomplete roll, reset it
@@ -174,10 +166,16 @@ function createRollRow(roll) {
             
             updateDisplay();
         } else {
-            // Toggle delete button
-            const allDeleteBtns = document.querySelectorAll('.delete-btn');
-            allDeleteBtns.forEach(btn => btn.style.display = 'none');
-            deleteBtn.style.display = 'inline-block';
+            // Toggle delete mode
+            allNumberCells.forEach(cell => {
+                if (cell !== numberCell && cell.classList.contains('delete-mode')) {
+                    cell.classList.remove('delete-mode');
+                    cell.textContent = cell.dataset.rollNumber;
+                }
+            });
+            numberCell.dataset.rollNumber = roll.number;
+            numberCell.textContent = 'Delete';
+            numberCell.classList.add('delete-mode');
         }
     });
 

@@ -47,21 +47,37 @@ button:hover {
 table {
     border-collapse: collapse;
     width: 100%;
+    border: none;
 }
 
 th, td {
     padding: 10px;
     text-align: left;
-    border: 1px solid #ddd;
+    border: none;
+    border-bottom: 1px solid #ddd;
+}
+
+th:last-child, td:last-child {
+    border-right: none;
 }
 
 th {
     background: #35424a;
     color: #ffffff;
+    border-bottom: 2px solid #ddd;
+}
+
+tr {
+    transition: all 0.2s ease;
 }
 
 tr:hover {
-    background: #f1f1f1;
+    background: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+tr:last-child td {
+    border-bottom: none;
 }
 
 #weapon-buttons {
@@ -195,25 +211,24 @@ tr:hover {
     animation: pulseRed 0.5s ease-in-out;
 }
 
-.delete-btn {
-    background-color: #ff4444;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
+.number-cell {
+    width: 60px;
+    text-align: center;
+    padding: 8px;
     cursor: pointer;
-    display: none;
-    margin-left: 8px;
-    font-size: 0.8rem;
+    transition: all 0.3s ease;
 }
 
-.delete-btn:hover {
+.number-cell.delete-mode {
+    background-color: #ff4444;
+    color: white;
+}
+
+.number-cell.delete-mode:hover {
     background-color: #cc0000;
 }
 
-.number-cell {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    width: 100px;
+/* Remove the old delete button styles as we won't need them anymore */
+.delete-btn {
+    display: none;
 }
