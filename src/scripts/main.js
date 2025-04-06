@@ -87,18 +87,31 @@ document.addEventListener('attributeSelected', (event) => {
 function updateDisplay() {
     if (!selectedWeapon) return;
     
-    const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
+    let rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
+    
+    // Filter out any null or undefined entries
+    rolls = rolls.filter(roll => roll && roll.attributes);
+    
+    // Reorder roll numbers including incomplete rolls
+    let nextNumber = 1;
+    rolls.sort((a, b) => a.number - b.number).forEach(roll => {
+        roll.number = nextNumber++;
+    });
+    
+    // Save reordered rolls back to storage
+    localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
+    
     const tbody = document.getElementById('rolls-body');
     tbody.innerHTML = '';
     
-    // Display completed rolls
-    rolls.filter(roll => roll.attributes.length === 5).forEach(roll => {
+    // Display all rolls
+    rolls.forEach(roll => {
         tbody.appendChild(createRollRow(roll));
     });
     
-    // Display current incomplete roll
-    if (currentRoll.attributes.length > 0) {
-        tbody.appendChild(createRollRow(currentRoll));
+    // Reset current roll number if needed
+    if (currentRoll.attributes.length === 0) {
+        currentRoll.number = nextNumber;
     }
 }
 
@@ -128,7 +141,46 @@ function createRollRow(roll) {
     
     // Add the roll number cell
     const numberCell = document.createElement('td');
-    numberCell.textContent = roll.number;
+    numberCell.className = 'number-cell';
+    
+    const numberSpan = document.createElement('span');
+    numberSpan.textContent = roll.number;
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.style.display = 'none';
+    
+    numberCell.appendChild(numberSpan);
+    numberCell.appendChild(deleteBtn);
+    
+    // Add click handler for the number cell
+    numberCell.addEventListener('click', (e) => {
+        if (e.target === deleteBtn) {
+            // Handle delete
+            const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
+            
+            // If this is the current incomplete roll, reset it
+            if (roll.number === currentRoll.number) {
+                currentRoll = {
+                    number: roll.number,
+                    attributes: []
+                };
+            }
+            
+            // Remove the roll and save
+            const updatedRolls = rolls.filter(r => r.number !== roll.number);
+            localStorage.setItem(selectedWeapon.id, JSON.stringify(updatedRolls));
+            
+            updateDisplay();
+        } else {
+            // Toggle delete button
+            const allDeleteBtns = document.querySelectorAll('.delete-btn');
+            allDeleteBtns.forEach(btn => btn.style.display = 'none');
+            deleteBtn.style.display = 'inline-block';
+        }
+    });
+
     row.appendChild(numberCell);
     
     // Add the attribute cells

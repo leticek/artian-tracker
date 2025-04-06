@@ -45,15 +45,14 @@ button:hover {
 }
 
 table {
-    width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    width: 100%;
 }
 
 th, td {
     padding: 10px;
     text-align: left;
-    border-bottom: 1px solid #dddddd;
+    border: 1px solid #ddd;
 }
 
 th {
@@ -194,4 +193,27 @@ tr:hover {
 
 .attribute-btn.error {
     animation: pulseRed 0.5s ease-in-out;
+}
+
+.delete-btn {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: none;
+    margin-left: 8px;
+    font-size: 0.8rem;
+}
+
+.delete-btn:hover {
+    background-color: #cc0000;
+}
+
+.number-cell {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    width: 100px;
 }
