@@ -216,7 +216,19 @@ tr:last-child td {
     text-align: center;
     padding: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.number-cell:hover:not(.delete-mode) {
+    background-color: #f0f0f0;
+}
+
+.number-cell:hover:not(.delete-mode)::after {
+    content: '×';
+    position: absolute;
+    right: 8px;
+    opacity: 0.3;
 }
 
 .number-cell.delete-mode {
