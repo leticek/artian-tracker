@@ -1,5 +1,6 @@
-const attributes = [
-    { id: 'attack', name: 'Attack Boost', icon: './resources/bow_icon.webp' },
+// Modify the attributes declaration to export it
+export const attributes = [
+    { id: 'attack', name: 'Attack Boost', icon: './resources/attack_icon.png' },
     { id: 'affinity', name: 'Affinity Boost', icon: '' },
     { id: 'elemental', name: 'Elemental Boost', icon: '' },
     { id: 'sharpness', name: 'Sharpness Boost', icon: './resources/sharpness_icon.webp' },

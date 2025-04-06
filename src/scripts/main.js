@@ -1,3 +1,11 @@
+// Add this import at the top of main.js
+import { attributes } from './attributes.js';
+
+// Add this helper function at the top of the file
+function getAttributeById(id) {
+    return attributes.find(attr => attr.id === id) || null;
+}
+
 let selectedWeapon = null;
 let currentRoll = {
     number: 1,
@@ -114,19 +122,37 @@ function loadWeaponRolls() {
     updateDisplay();
 }
 
+// Update the createRollRow function
 function createRollRow(roll) {
     const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${roll.number}</td>
-        ${Array(5).fill().map((_, i) => `
-            <td class="attribute-cell" data-roll="${roll.number}" data-position="${i}">
-                ${roll.attributes[i] || ''}
-            </td>
-        `).join('')}
-    `;
     
-    // Add click listeners to attribute cells
-    row.querySelectorAll('.attribute-cell').forEach(cell => {
+    // Add the roll number cell
+    const numberCell = document.createElement('td');
+    numberCell.textContent = roll.number;
+    row.appendChild(numberCell);
+    
+    // Add the attribute cells
+    for (let i = 0; i < 5; i++) {
+        const cell = document.createElement('td');
+        cell.className = 'attribute-cell';
+        cell.setAttribute('data-roll', roll.number);
+        cell.setAttribute('data-position', i);
+        
+        const attributeId = roll.attributes[i];
+        if (attributeId) {
+            const attribute = getAttributeById(attributeId);
+            if (attribute) {
+                const content = document.createElement('div');
+                content.className = 'attribute-content';
+                content.innerHTML = `
+                    <img src="${attribute.icon}" alt="${attribute.name}" 
+                         onerror="this.style.display='none'">
+                    <span>${attribute.name}</span>
+                `;
+                cell.appendChild(content);
+            }
+        }
+        
         cell.addEventListener('click', () => {
             if (selectedAttributeCell) {
                 selectedAttributeCell.classList.remove('selected');
@@ -134,7 +160,9 @@ function createRollRow(roll) {
             cell.classList.add('selected');
             selectedAttributeCell = cell;
         });
-    });
+        
+        row.appendChild(cell);
+    }
     
     return row;
 }

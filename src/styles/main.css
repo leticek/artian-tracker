@@ -144,11 +144,34 @@ tr:hover {
 
 .attribute-cell {
     cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 120px;
+    height: 60px;
+    padding: 8px;
 }
 
 .attribute-cell.selected {
     background-color: #e8f5e9;
     border: 2px solid #4CAF50;
+}
+
+.attribute-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 100%;
+}
+
+.attribute-content img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.attribute-content span {
+    font-size: 0.9rem;
 }
 
 @keyframes pulseRed {
