@@ -1,7 +1,12 @@
 describe('Weapon Roll Tracker', () => {
   beforeEach(() => {
-    cy.visit('/');
-  });
+    cy.visit('/')
+  })
+
+  it('loads successfully', () => {
+    cy.get('#weapon-buttons').should('exist')
+    cy.get('#attribute-buttons').should('exist')
+  })
 
   it('should load weapon buttons', () => {
     cy.get('#weapon-buttons button').should('have.length.greaterThan', 0);
