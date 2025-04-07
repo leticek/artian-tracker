@@ -1,4 +1,21 @@
+# Dependencies
 node_modules/
-coverage/
-cypress/videos/
-cypress/screenshots/
+
+# Testing
+/test/jest/coverage/
+/test/cypress/videos/
+/test/cypress/screenshots/
+/test/cypress/downloads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+System Volume Information/

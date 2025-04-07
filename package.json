@@ -4,12 +4,12 @@
   "description": "Weapon roll tracker for games",
   "main": "index.html",
   "scripts": {
-    "test": "jest --env=jsdom --verbose --detectOpenHandles",
-    "test:watch": "jest --watch --env=jsdom --verbose",
+    "test": "jest --config test/jest/jest.config.js --env=jsdom --verbose --detectOpenHandles",
+    "test:watch": "jest --config test/jest/jest.config.js --watch --env=jsdom --verbose",
     "test:e2e": "start-server-and-test start http://localhost:8080 cypress:run",
     "cypress:open": "start-server-and-test start http://localhost:8080 \"cypress open\"",
     "start": "http-server . -p 8080",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run --config-file test/cypress/cypress.config.js"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
