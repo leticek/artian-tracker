@@ -17,10 +17,8 @@ const weapons = [
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Content Loaded");
     
     const weaponButtonsContainer = document.getElementById('weapon-buttons');
-    console.log("Container found:", weaponButtonsContainer);
 
     if (!weapons) {
         console.error("Weapons data not loaded!");
@@ -28,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     weapons.forEach(weapon => {
-        console.log("Creating button for:", weapon.name);
         const button = document.createElement('button');
         button.className = 'weapon-btn';
         button.setAttribute('data-weapon-id', weapon.id);

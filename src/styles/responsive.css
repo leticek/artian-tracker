@@ -19,6 +19,29 @@
     th, td {
         padding: 8px;
     }
+
+    #data-management {
+        padding: 1rem;
+    }
+    
+    .import-container, .export-container {
+        min-width: 100%;
+        padding: 0.75rem;
+    }
+    
+    textarea#import-data, textarea#export-data {
+        min-height: 120px;
+    }
+    
+    .action-btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .export-buttons {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 480px) {
@@ -46,11 +69,43 @@
     th, td {
         padding: 10px;
     }
+
+    #data-management {
+        padding: 1.5rem;
+    }
+    
+    .import-export-container {
+        flex-direction: column;
+    }
+    
+    .import-container, .export-container {
+        max-width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
     #weapon-buttons {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .table-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0;
+        margin-bottom: 10px;
+    }
+    
+    .sort-toggle {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+    }
+    
+    #rolls-table {
+        overflow-x: auto; /* Allow table to scroll horizontally on small screens */
+    }
+    
+    #rolls-table table {
+        min-width: 100%; /* Ensure table takes full width */
     }
 }
 
@@ -74,10 +129,67 @@
     th, td {
         padding: 12px;
     }
+    
+    .import-export-container {
+        flex-wrap: nowrap;
+    }
+    
+    .import-container, .export-container {
+        max-width: 49%;
+        min-width: 400px;
+    }
+    
+    textarea#import-data, textarea#export-data {
+        min-height: 180px;
+    }
 }
 
 @media (max-width: 1024px) {
     #weapon-buttons {
         grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .sort-toggle .sort-label {
+        display: none; /* Hide "Sort:" label on very small screens */
+    }
+    
+    .sort-toggle {
+        padding: 5px 8px;
+    }
+    
+    .table-controls {
+        justify-content: center; /* Center on very small screens */
+    }
+    
+    .sort-toggle {
+        margin: 0 auto; /* Center the button on very small screens */
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive styles for table controls */
+@media (max-width: 768px) {
+    .table-controls {
+        padding: 0;
+        margin-bottom: 10px;
+    }
+    
+    .sort-toggle {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sort-toggle {
+        min-width: 110px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .sort-toggle .sort-label {
+        display: none; /* Hide "Sort:" label on very small screens */
     }
 }

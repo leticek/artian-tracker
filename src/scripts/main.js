@@ -14,12 +14,27 @@ let currentRoll = {
 let selectedAttributeCell = null;
 let deleteWeaponClickTimeout = null;
 let deleteAllClickTimeout = null;
+let sortAscending = true; // Default sort order is ascending
+
+// Add error message element reference for better handling
+let errorMessageElement = null;
 
 // Listen for weapon selection
 document.addEventListener('weaponSelected', (event) => {
-    console.log("Weapon selected:", event.detail);
     selectedWeapon = event.detail;
     loadWeaponRolls();
+});
+
+// Listen for data import event
+document.addEventListener('dataImported', (event) => {
+    // Get the list of imported weapons
+    const importedWeapons = event.detail?.importedWeapons || [];
+    
+    // If a weapon is selected and it's one of the imported weapons, reload its data
+    if (selectedWeapon && importedWeapons.includes(selectedWeapon.id)) {
+        // Force reload the weapon data
+        loadWeaponRolls();
+    }
 });
 
 // Replace the entire attributeSelected event listener
@@ -54,12 +69,16 @@ document.addEventListener('attributeSelected', (event) => {
             }
         } else {
             // Handle completed rolls in localStorage
-            const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-            const roll = rolls.find(r => r.number === rollNumber);
-            
-            if (roll) {
-                roll.attributes[position] = attribute.id;
-                localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
+            try {
+                const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
+                const roll = rolls.find(r => r.number === rollNumber);
+                
+                if (roll) {
+                    roll.attributes[position] = attribute.id;
+                    localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
+                }
+            } catch (error) {
+                showError(`Error updating roll: ${error.message}`);
             }
         }
         
@@ -85,56 +104,137 @@ document.addEventListener('attributeSelected', (event) => {
     }
 });
 
+// Helper function to show error messages
+function showError(message) {
+    if (errorMessageElement) {
+        errorMessageElement.textContent = message;
+        errorMessageElement.style.display = 'block';
+        
+        // Hide error after 5 seconds
+        setTimeout(() => {
+            errorMessageElement.style.display = 'none';
+        }, 5000);
+    } else {
+        console.error(message);
+    }
+}
+
 // Add this new function to handle display updates
 function updateDisplay() {
     if (!selectedWeapon) return;
     
-    let rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-    
-    // Filter out any null or undefined entries
-    rolls = rolls.filter(roll => roll && roll.attributes);
-    
-    // Reorder roll numbers including incomplete rolls
-    let nextNumber = 1;
-    rolls.sort((a, b) => a.number - b.number).forEach(roll => {
-        roll.number = nextNumber++;
-    });
-    
-    // Save reordered rolls back to storage
-    localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
-    
-    const tbody = document.getElementById('rolls-body');
-    tbody.innerHTML = '';
-    
-    // Display all rolls
-    rolls.forEach(roll => {
-        tbody.appendChild(createRollRow(roll));
-    });
-    
-    // Reset current roll number if needed
-    if (currentRoll.attributes.length === 0) {
-        currentRoll.number = nextNumber;
+    try {
+        const storedData = localStorage.getItem(selectedWeapon.id);
+        // If no data exists, just clear the table and return
+        if (!storedData) {
+            const tbody = document.getElementById('rolls-body');
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        let rolls;
+        try {
+            rolls = JSON.parse(storedData);
+        } catch (error) {
+            showError(`Error loading data for ${selectedWeapon.name}. Data may be corrupted.`);
+            const tbody = document.getElementById('rolls-body');
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        // Filter out any null or undefined entries or empty attribute arrays
+        rolls = rolls.filter(roll => roll && roll.attributes && roll.attributes.length > 0);
+        
+        // If after filtering there are no rolls with attributes, remove the entry from localStorage
+        if (rolls.length === 0) {
+            localStorage.removeItem(selectedWeapon.id);
+            const tbody = document.getElementById('rolls-body');
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        // Reorder roll numbers including incomplete rolls
+        let nextNumber = 1;
+        rolls.sort((a, b) => a.number - b.number).forEach(roll => {
+            roll.number = nextNumber++;
+        });
+        
+        // Save reordered rolls back to storage
+        localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
+        
+        const tbody = document.getElementById('rolls-body');
+        tbody.innerHTML = '';
+        
+        // Sort rolls based on the current sort direction
+        const displayRolls = [...rolls];
+        if (!sortAscending) {
+            displayRolls.sort((a, b) => b.number - a.number);
+        }
+        
+        // Display all rolls
+        displayRolls.forEach(roll => {
+            tbody.appendChild(createRollRow(roll));
+        });
+        
+        // Reset current roll number if needed
+        if (currentRoll.attributes.length === 0) {
+            currentRoll.number = nextNumber;
+        }
+        
+        // Update sort direction text and attributes without animations
+        const sortToggle = document.getElementById('sort-toggle');
+        const sortDirectionEl = document.getElementById('sort-direction');
+        
+        if (sortToggle && sortDirectionEl) {
+            sortDirectionEl.textContent = sortAscending ? 'Ascending' : 'Descending';
+            sortToggle.setAttribute('data-order', sortAscending ? 'ascending' : 'descending');
+        }
+    } catch (error) {
+        showError(`Error updating display: ${error.message}`);
     }
 }
 
 function loadWeaponRolls() {
     if (!selectedWeapon) return;
     
-    const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-    
-    // Find incomplete roll if it exists
-    const incompleteRoll = rolls.find(r => r.attributes.length < 5);
-    
-    if (incompleteRoll) {
-        currentRoll = incompleteRoll;
-    } else {
-        currentRoll = {
-            number: (rolls.length > 0 ? rolls[rolls.length - 1].number + 1 : 1),
-            attributes: []
-        };
+    try {
+        // Get stored data if exists, but don't create an entry if there's no data
+        const storedData = localStorage.getItem(selectedWeapon.id);
+        
+        // Handle possible corrupt data
+        let rolls = [];
+        if (storedData) {
+            try {
+                rolls = JSON.parse(storedData);
+            } catch (error) {
+                showError(`Error loading data for ${selectedWeapon.name}. Data may be corrupted.`);
+                return;
+            }
+        }
+        
+        // Find incomplete roll if it exists
+        const incompleteRoll = rolls.find(r => r.attributes.length < 5);
+        
+        if (incompleteRoll) {
+            currentRoll = incompleteRoll;
+        } else {
+            currentRoll = {
+                number: (rolls.length > 0 ? rolls[rolls.length - 1].number + 1 : 1),
+                attributes: []
+            };
+        }
+        
+        // Only update display if there are rolls with data
+        if (rolls.length > 0) {
+            updateDisplay();
+        } else {
+            // Clear the table if there's no data
+            const tbody = document.getElementById('rolls-body');
+            tbody.innerHTML = '';
+        }
+    } catch (error) {
+        showError(`Error loading weapon data: ${error.message}`);
     }
-    
-    updateDisplay();
 }
 
 // Update the createRollRow function
@@ -152,21 +252,25 @@ function createRollRow(roll) {
         
         if (numberCell.classList.contains('delete-mode')) {
             // Delete the roll
-            const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-            
-            // If this is the current incomplete roll, reset it
-            if (roll.number === currentRoll.number) {
-                currentRoll = {
-                    number: roll.number,
-                    attributes: []
-                };
+            try {
+                const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
+                
+                // If this is the current incomplete roll, reset it
+                if (roll.number === currentRoll.number) {
+                    currentRoll = {
+                        number: roll.number,
+                        attributes: []
+                    };
+                }
+                
+                // Remove the roll and save
+                const updatedRolls = rolls.filter(r => r.number !== roll.number);
+                localStorage.setItem(selectedWeapon.id, JSON.stringify(updatedRolls));
+                
+                updateDisplay();
+            } catch (error) {
+                showError(`Error deleting roll: ${error.message}`);
             }
-            
-            // Remove the roll and save
-            const updatedRolls = rolls.filter(r => r.number !== roll.number);
-            localStorage.setItem(selectedWeapon.id, JSON.stringify(updatedRolls));
-            
-            updateDisplay();
         } else {
             // Toggle delete mode
             allNumberCells.forEach(cell => {
@@ -219,38 +323,35 @@ function createRollRow(roll) {
     return row;
 }
 
-function saveRoll() {
-    const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-    rolls.push(currentRoll);
-    localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
-}
-
-function updateRollInStorage(rollNumber, position, attribute) {
-    const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-    const roll = rolls.find(r => r.number === rollNumber);
-    if (roll) {
-        roll.attributes[position] = attribute;
-        localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
-    }
-}
-
 function saveIncompleteRoll() {
     if (!selectedWeapon || !currentRoll.attributes.length) return;
     
-    const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-    const existingRollIndex = rolls.findIndex(r => r.number === currentRoll.number);
-    
-    if (existingRollIndex >= 0) {
-        rolls[existingRollIndex] = currentRoll;
-    } else {
-        rolls.push(currentRoll);
+    try {
+        const storedData = localStorage.getItem(selectedWeapon.id);
+        const rolls = storedData ? JSON.parse(storedData) : [];
+        
+        const existingRollIndex = rolls.findIndex(r => r.number === currentRoll.number);
+        
+        if (existingRollIndex >= 0) {
+            rolls[existingRollIndex] = currentRoll;
+        } else {
+            rolls.push(currentRoll);
+        }
+        
+        // Only save if there's actual data
+        if (rolls.some(roll => roll.attributes.length > 0)) {
+            localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
+        }
+    } catch (error) {
+        showError(`Error saving roll: ${error.message}`);
     }
-    
-    localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
 }
 
 // At the end of the file, wrap the delete button event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize the error message element reference
+    errorMessageElement = document.getElementById('error-message');
+
     const deleteWeaponBtn = document.getElementById('delete-weapon');
     if (deleteWeaponBtn) {
         deleteWeaponBtn.addEventListener('click', function() {
@@ -297,17 +398,18 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteAllBtn.addEventListener('click', function() {
             if (this.classList.contains('confirm')) {
                 // Second click - perform deletion
+                // Store the selected weapon reference before clearing localStorage
+                const currentWeaponId = selectedWeapon ? selectedWeapon.id : null;
+                
                 localStorage.clear();
+                
+                // Reset current roll
                 currentRoll = {
                     number: 1,
                     attributes: []
                 };
-                selectedWeapon = null;
-
-                // Reset all weapon button selections
-                document.querySelectorAll('.weapon-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
+                
+                // Do NOT clear selectedWeapon
 
                 // Clear the table
                 const tbody = document.getElementById('rolls-body');
@@ -329,6 +431,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.textContent = 'Delete All Data';
                 }, 3000);
             }
+        });
+    }
+
+    // Add the sort toggle button event listener with proper sorting implementation
+    const sortToggle = document.getElementById('sort-toggle');
+    if (sortToggle) {
+        sortToggle.addEventListener('click', function() {
+            sortAscending = !sortAscending;
+            
+            // Make sure sort direction is immediately updated for tests
+            const sortDirectionEl = document.getElementById('sort-direction');
+            if (sortDirectionEl) {
+                sortDirectionEl.textContent = sortAscending ? 'Ascending' : 'Descending';
+            }
+            
+            this.setAttribute('data-order', sortAscending ? 'ascending' : 'descending');
+            
+            // Update the display with the new sort order
+            updateDisplay();
         });
     }
 });

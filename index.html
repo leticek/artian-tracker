@@ -22,21 +22,37 @@
             </div>
         </section>
         <section id="rolls-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Num.</th>
-                        <th>Attribute 1</th>
-                        <th>Attribute 2</th>
-                        <th>Attribute 3</th>
-                        <th>Attribute 4</th>
-                        <th>Attribute 5</th>
-                    </tr>
-                </thead>
-                <tbody id="rolls-body">
-                    <!-- Selected rolls will be displayed here -->
-                </tbody>
-            </table>
+            <div class="table-container">
+                <div class="table-controls">
+                    <button id="sort-toggle" class="sort-toggle" data-order="ascending">
+                        <span class="sort-label">Sort: </span>
+                        <span id="sort-direction" class="sort-direction">Ascending</span>
+                        <span class="sort-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 14l5-5 5 5z"/>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+                <div id="error-message" class="message error" style="display: none;"></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Num.</th>
+                                <th>Attribute 1</th>
+                                <th>Attribute 2</th>
+                                <th>Attribute 3</th>
+                                <th>Attribute 4</th>
+                                <th>Attribute 5</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rolls-body">
+                            <!-- Selected rolls will be displayed here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
         <section id="danger-zone">
             <div class="danger-buttons">
@@ -44,11 +60,40 @@
                 <button id="delete-all" class="danger-btn danger-btn-critical">Delete All Data</button>
             </div>
         </section>
+        
+        <section id="data-management">
+            
+            <div class="import-export-container">
+                <div class="import-container">
+                    <h3>Import Data</h3>
+                    <div class="import-input-container">
+                        <textarea id="import-data" placeholder="Paste your weapon data JSON here..."></textarea>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="import-button" class="action-btn">Import Data</button>
+                    </div>
+                    <div id="import-message" class="message"></div>
+                </div>
+                
+                <div class="export-container">
+                    <h3>Export Data</h3>
+                    <button id="export-button" class="action-btn">Export All Data</button>
+                    <div class="export-output-container" style="display: none;">
+                        <textarea id="export-data" readonly></textarea>
+                        <div class="export-buttons">
+                            <button id="copy-button" class="action-btn">Copy to Clipboard</button>
+                            <button id="download-button" class="action-btn">Download as JSON</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
     <!-- Add script files -->
     <script type="module" src="./src/scripts/weapons.js"></script>
     <script type="module" src="./src/scripts/attributes.js"></script>
     <script type="module" src="./src/scripts/main.js"></script>
+    <script type="module" src="./src/scripts/import-export.js"></script>
     <hr class="footer-divider">
     <footer class="bmc-footer">
         <div class="bmc-btn-container">
