@@ -8,7 +8,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'test/jest/mocks/styleMock.js',
-    '\\.(gif|ttf|eot|svg|png|webp)$': '<rootDir>/__mocks__/fileMock.js',
+    '\\.(gif|ttf|eot|svg|png|webp)$': 'test/jest/mocks/fileMock.js',
   },
   setupFiles: ['<rootDir>/jest.setup.js'],
   testTimeout: 10000,
