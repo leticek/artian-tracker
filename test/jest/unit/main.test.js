@@ -15,12 +15,12 @@ const mockAttributes = [
 ];
 
 // Simple mocks without DOM manipulation
-jest.mock('../weapons', () => ({
+jest.mock('../../../src/scripts/weapons', () => ({
   weapons: mockWeapons,
   setupWeaponButtons: jest.fn()
 }));
 
-jest.mock('../attributes', () => ({
+jest.mock('../../../src/scripts/attributes', () => ({
   attributes: mockAttributes
 }));
 
@@ -53,7 +53,7 @@ describe('Weapon Roll Tracker', () => {
 
     // Reset modules
     jest.resetModules();
-
+    
     // Setup weapon button click handlers
     document.querySelectorAll('.weapon-btn').forEach(button => {
       button.addEventListener('click', () => {
@@ -70,7 +70,7 @@ describe('Weapon Roll Tracker', () => {
     });
 
     // Initialize main.js
-    require('../main.js');
+    require('../../../src/scripts/main.js');
 
     // Trigger DOMContentLoaded
     document.dispatchEvent(new Event('DOMContentLoaded'));

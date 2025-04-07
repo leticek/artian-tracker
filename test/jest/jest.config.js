@@ -1,7 +1,10 @@
 module.exports = {
   testEnvironment: 'jsdom',
   transform: {
-    '^.+\\.js$': 'babel-jest',
+    '^.+\\.js$': ['babel-jest', { 
+      presets: [['@babel/preset-env', { targets: { node: 'current' } }]],
+      plugins: ['@babel/plugin-transform-modules-commonjs']
+    }]
   },
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': '<rootDir>/__mocks__/styleMock.js',
