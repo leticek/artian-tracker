@@ -216,4 +216,43 @@ describe('Weapon Roll Tracker', () => {
       });
     }).toThrow('Invalid schema');
   });
+
+  test('delete all data should keep weapon selection', () => {
+    // Setup initial data
+    localStorageMock.store = {
+      bow: JSON.stringify([{ number: 1, attributes: ['attack'] }])
+    };
+    
+    // Select a weapon
+    const weaponBtn = document.querySelector('[data-weapon-id="bow"]');
+    weaponBtn.click();
+    
+    // Initial check - weapon is selected
+    expect(weaponBtn.classList.contains('selected')).toBe(true);
+    
+    // Delete all data
+    const deleteAllBtn = document.getElementById('delete-all');
+    deleteAllBtn.click(); // First click
+    deleteAllBtn.click(); // Confirmation click
+    
+    // Verify localStorage was cleared
+    expect(localStorageMock.clear).toHaveBeenCalled();
+    
+    // Verify weapon button is still selected
+    expect(weaponBtn.classList.contains('selected')).toBe(true);
+  });
+
+  test('dataImported event should update UI for selected weapon', () => {
+    // Select a weapon
+    const weaponBtn = document.querySelector('[data-weapon-id="bow"]');
+    weaponBtn.click();
+    
+    // Simulate an import event for the selected weapon
+    document.dispatchEvent(new CustomEvent('dataImported', {
+      detail: { importedWeapons: ['bow'] }
+    }));
+    
+    // Verify getItem was called on the selected weapon - indicates a reload attempt
+    expect(localStorageMock.getItem).toHaveBeenCalledWith('bow');
+  });
 });

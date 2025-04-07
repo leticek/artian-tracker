@@ -7,7 +7,7 @@
     "test": "jest --config test/jest/jest.config.js --env=jsdom --verbose --detectOpenHandles",
     "test:watch": "jest --config test/jest/jest.config.js --watch --env=jsdom --verbose",
     "test:e2e": "start-server-and-test start http://localhost:8080 cypress:run",
-    "cypress:open": "start-server-and-test start http://localhost:8080 \"cypress open\"",
+    "cypress:open": "start-server-and-test start http://localhost:8080 \"cypress open --config-file test/cypress/cypress.config.js\"",
     "start": "http-server . -p 8080",
     "cypress:run": "cypress run --config-file test/cypress/cypress.config.js"
   },
