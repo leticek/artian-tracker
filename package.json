@@ -1,0 +1,28 @@
+{
+  "name": "weapon-roll-tracker",
+  "version": "1.0.0",
+  "description": "Weapon roll tracker for games",
+  "main": "index.html",
+  "scripts": {
+    "test": "jest --config test/jest/jest.config.js --env=jsdom --verbose --detectOpenHandles",
+    "test:watch": "jest --config test/jest/jest.config.js --watch --env=jsdom --verbose",
+    "test:e2e": "start-server-and-test start http://localhost:8080 cypress:run",
+    "cypress:open": "start-server-and-test start http://localhost:8080 \"cypress open\"",
+    "start": "http-server . -p 8080",
+    "cypress:run": "cypress run --config-file test/cypress/cypress.config.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/plugin-transform-modules-commonjs": "^7.26.3",
+    "@babel/preset-env": "^7.26.9",
+    "babel-jest": "^29.7.0",
+    "cypress": "^13.17.0",
+    "http-server": "^14.1.1",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "start-server-and-test": "^2.0.11"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

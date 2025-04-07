@@ -249,79 +249,86 @@ function saveIncompleteRoll() {
     localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
 }
 
-// Add this code at the end of the file
+// At the end of the file, wrap the delete button event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const deleteWeaponBtn = document.getElementById('delete-weapon');
+    if (deleteWeaponBtn) {
+        deleteWeaponBtn.addEventListener('click', function() {
+            if (!selectedWeapon) {
+                this.classList.add('error');
+                this.textContent = 'Select a weapon first';
+                
+                setTimeout(() => {
+                    this.classList.remove('error');
+                    this.textContent = 'Delete Weapon Data';
+                }, 2000);
+                return;
+            }
 
-document.getElementById('delete-weapon').addEventListener('click', function() {
-    if (!selectedWeapon) {
-        this.classList.add('error');
-        this.textContent = 'Select a weapon first';
-        
-        setTimeout(() => {
-            this.classList.remove('error');
-            this.textContent = 'Delete Weapon Data';
-        }, 2000);
-        return;
-    }
-
-    if (this.classList.contains('confirm')) {
-        // Second click - perform deletion
-        localStorage.removeItem(selectedWeapon.id);
-        currentRoll = {
-            number: 1,
-            attributes: []
-        };
-        updateDisplay();
-        this.classList.remove('confirm');
-        this.textContent = 'Delete Weapon Data';
-        if (deleteWeaponClickTimeout) {
-            clearTimeout(deleteWeaponClickTimeout);
-        }
-    } else {
-        // First click - show confirmation state
-        this.classList.add('confirm');
-        this.textContent = `Click again to delete ${selectedWeapon.name}`;
-        
-        // Reset after 3 seconds
-        deleteWeaponClickTimeout = setTimeout(() => {
-            this.classList.remove('confirm');
-            this.textContent = 'Delete Weapon Data';
-        }, 3000);
-    }
-});
-
-document.getElementById('delete-all').addEventListener('click', function() {
-    if (this.classList.contains('confirm')) {
-        // Second click - perform deletion
-        localStorage.clear();
-        currentRoll = {
-            number: 1,
-            attributes: []
-        };
-        selectedWeapon = null;
-
-        // Reset all weapon button selections
-        document.querySelectorAll('.weapon-btn').forEach(btn => {
-            btn.classList.remove('selected');
+            if (this.classList.contains('confirm')) {
+                // Second click - perform deletion
+                localStorage.removeItem(selectedWeapon.id);
+                currentRoll = {
+                    number: 1,
+                    attributes: []
+                };
+                updateDisplay();
+                this.classList.remove('confirm');
+                this.textContent = 'Delete Weapon Data';
+                if (deleteWeaponClickTimeout) {
+                    clearTimeout(deleteWeaponClickTimeout);
+                }
+            } else {
+                // First click - show confirmation state
+                this.classList.add('confirm');
+                this.textContent = `Click again to delete ${selectedWeapon.name}`;
+                
+                // Reset after 3 seconds
+                deleteWeaponClickTimeout = setTimeout(() => {
+                    this.classList.remove('confirm');
+                    this.textContent = 'Delete Weapon Data';
+                }, 3000);
+            }
         });
+    }
 
-        // Clear the table
-        const tbody = document.getElementById('rolls-body');
-        tbody.innerHTML = '';
+    const deleteAllBtn = document.getElementById('delete-all');
+    if (deleteAllBtn) {
+        deleteAllBtn.addEventListener('click', function() {
+            if (this.classList.contains('confirm')) {
+                // Second click - perform deletion
+                localStorage.clear();
+                currentRoll = {
+                    number: 1,
+                    attributes: []
+                };
+                selectedWeapon = null;
 
-        this.classList.remove('confirm');
-        this.textContent = 'Delete All Data';
-        if (deleteAllClickTimeout) {
-            clearTimeout(deleteAllClickTimeout);
-        }
-    } else {
-        // First click - show confirmation state
-        this.classList.add('confirm');
-        this.textContent = 'Click again to delete ALL data';
-        
-        // Reset after 3 seconds
-        deleteAllClickTimeout = setTimeout(() => {
-            this.classList.remove('confirm');
-            this.textContent = 'Delete All Data';
-        }, 3000);
+                // Reset all weapon button selections
+                document.querySelectorAll('.weapon-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+
+                // Clear the table
+                const tbody = document.getElementById('rolls-body');
+                tbody.innerHTML = '';
+
+                this.classList.remove('confirm');
+                this.textContent = 'Delete All Data';
+                if (deleteAllClickTimeout) {
+                    clearTimeout(deleteAllClickTimeout);
+                }
+            } else {
+                // First click - show confirmation state
+                this.classList.add('confirm');
+                this.textContent = 'Click again to delete ALL data';
+                
+                // Reset after 3 seconds
+                deleteAllClickTimeout = setTimeout(() => {
+                    this.classList.remove('confirm');
+                    this.textContent = 'Delete All Data';
+                }, 3000);
+            }
+        });
     }
 });
