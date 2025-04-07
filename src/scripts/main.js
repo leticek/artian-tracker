@@ -14,6 +14,7 @@ let currentRoll = {
 let selectedAttributeCell = null;
 let deleteWeaponClickTimeout = null;
 let deleteAllClickTimeout = null;
+let sortAscending = true; // Default sort order is ascending
 
 // Listen for weapon selection
 document.addEventListener('weaponSelected', (event) => {
@@ -133,14 +134,29 @@ function updateDisplay() {
     const tbody = document.getElementById('rolls-body');
     tbody.innerHTML = '';
     
+    // Sort rolls based on the current sort direction
+    const displayRolls = [...rolls];
+    if (!sortAscending) {
+        displayRolls.reverse();
+    }
+    
     // Display all rolls
-    rolls.forEach(roll => {
+    displayRolls.forEach(roll => {
         tbody.appendChild(createRollRow(roll));
     });
     
     // Reset current roll number if needed
     if (currentRoll.attributes.length === 0) {
         currentRoll.number = nextNumber;
+    }
+    
+    // Update sort direction text and attributes without animations
+    const sortToggle = document.getElementById('sort-toggle');
+    const sortDirectionEl = document.getElementById('sort-direction');
+    
+    if (sortToggle && sortDirectionEl) {
+        sortDirectionEl.textContent = sortAscending ? 'Ascending' : 'Descending';
+        sortToggle.setAttribute('data-order', sortAscending ? 'ascending' : 'descending');
     }
 }
 
@@ -356,6 +372,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.textContent = 'Delete All Data';
                 }, 3000);
             }
+        });
+    }
+
+    // Add the sort toggle button event listener
+    const sortToggle = document.getElementById('sort-toggle');
+    if (sortToggle) {
+        sortToggle.addEventListener('click', function() {
+            sortAscending = !sortAscending;
+            updateDisplay();
         });
     }
 });

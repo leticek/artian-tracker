@@ -87,6 +87,26 @@
     #weapon-buttons {
         grid-template-columns: repeat(3, 1fr);
     }
+
+    .table-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0;
+        margin-bottom: 10px;
+    }
+    
+    .sort-toggle {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+    }
+    
+    #rolls-table {
+        overflow-x: auto; /* Allow table to scroll horizontally on small screens */
+    }
+    
+    #rolls-table table {
+        min-width: 100%; /* Ensure table takes full width */
+    }
 }
 
 /* Desktop styles */
@@ -127,5 +147,49 @@
 @media (max-width: 1024px) {
     #weapon-buttons {
         grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .sort-toggle .sort-label {
+        display: none; /* Hide "Sort:" label on very small screens */
+    }
+    
+    .sort-toggle {
+        padding: 5px 8px;
+    }
+    
+    .table-controls {
+        justify-content: center; /* Center on very small screens */
+    }
+    
+    .sort-toggle {
+        margin: 0 auto; /* Center the button on very small screens */
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive styles for table controls */
+@media (max-width: 768px) {
+    .table-controls {
+        padding: 0;
+        margin-bottom: 10px;
+    }
+    
+    .sort-toggle {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sort-toggle {
+        min-width: 110px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .sort-toggle .sort-label {
+        display: none; /* Hide "Sort:" label on very small screens */
     }
 }

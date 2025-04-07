@@ -22,21 +22,36 @@
             </div>
         </section>
         <section id="rolls-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Num.</th>
-                        <th>Attribute 1</th>
-                        <th>Attribute 2</th>
-                        <th>Attribute 3</th>
-                        <th>Attribute 4</th>
-                        <th>Attribute 5</th>
-                    </tr>
-                </thead>
-                <tbody id="rolls-body">
-                    <!-- Selected rolls will be displayed here -->
-                </tbody>
-            </table>
+            <div class="table-container">
+                <div class="table-controls">
+                    <button id="sort-toggle" class="sort-toggle" data-order="ascending">
+                        <span class="sort-label">Sort: </span>
+                        <span id="sort-direction" class="sort-direction">Ascending</span>
+                        <span class="sort-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 14l5-5 5 5z"/>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Num.</th>
+                                <th>Attribute 1</th>
+                                <th>Attribute 2</th>
+                                <th>Attribute 3</th>
+                                <th>Attribute 4</th>
+                                <th>Attribute 5</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rolls-body">
+                            <!-- Selected rolls will be displayed here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
         <section id="danger-zone">
             <div class="danger-buttons">
@@ -46,9 +61,6 @@
         </section>
         
         <section id="data-management">
-            <div class="section-title">
-                <h2>Import / Export Data</h2>
-            </div>
             
             <div class="import-export-container">
                 <div class="import-container">
