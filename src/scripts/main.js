@@ -1,455 +1,691 @@
-// Add this import at the top of main.js
-import { attributes } from './attributes.js';
+// Main application logic
+(function() {
+    // Access globals
+    var attributes = window.AttributeData.attributes;
+    var GogmaMain = window.GogmaMain;
 
-// Add this helper function at the top of the file
-function getAttributeById(id) {
-    return attributes.find(attr => attr.id === id) || null;
-}
+    // Helper function to get attribute by ID
+    function getAttributeById(id) {
+        return attributes.find(function(attr) { return attr.id === id; }) || null;
+    }
 
-let selectedWeapon = null;
-let currentRoll = {
-    number: 1,
-    attributes: []
-};
-let selectedAttributeCell = null;
-let deleteWeaponClickTimeout = null;
-let deleteAllClickTimeout = null;
-let sortAscending = true; // Default sort order is ascending
+    var selectedWeapon = null;
+    var currentRoll = {
+        number: 1,
+        attributes: []
+    };
+    var selectedAttributeCell = null;
+    var deleteWeaponClickTimeout = null;
+    var deleteAllClickTimeout = null;
+    var sortAscending = true;
+    var errorMessageElement = null;
+    var currentGogmaConfig = null;
 
-// Add error message element reference for better handling
-let errorMessageElement = null;
+    // Listen for weapon selection
+    document.addEventListener('weaponSelected', function(event) {
+        selectedWeapon = event.detail;
 
-// Listen for weapon selection
-document.addEventListener('weaponSelected', (event) => {
-    selectedWeapon = event.detail;
-    loadWeaponRolls();
-});
+        // Show/hide gogma config panel based on mode
+        var gogmaConfig = document.getElementById('gogma-config');
+        if (gogmaConfig) {
+            if (GogmaMain.isGogmaMode()) {
+                gogmaConfig.style.display = 'block';
+                loadGogmaConfigPanel();
+            } else {
+                gogmaConfig.style.display = 'none';
+            }
+        }
 
-// Listen for data import event
-document.addEventListener('dataImported', (event) => {
-    // Get the list of imported weapons
-    const importedWeapons = event.detail?.importedWeapons || [];
-    
-    // If a weapon is selected and it's one of the imported weapons, reload its data
-    if (selectedWeapon && importedWeapons.includes(selectedWeapon.id)) {
-        // Force reload the weapon data
         loadWeaponRolls();
-    }
-});
+    });
 
-// Replace the entire attributeSelected event listener
-document.addEventListener('attributeSelected', (event) => {
-    const attribute = event.detail;
-    const clickedButton = document.querySelector(`.attribute-btn[data-attribute-id="${attribute.id}"]`);
-    
-    if (!selectedWeapon) {
-        clickedButton.classList.add('error');
-        // Remove the error class after animation completes
-        setTimeout(() => {
-            clickedButton.classList.remove('error');
-        }, 500);
-        return;
-    }
+    // Listen for data import event
+    document.addEventListener('dataImported', function(event) {
+        var importedWeapons = (event.detail && event.detail.importedWeapons) || [];
 
-    // If a cell is selected, update it
-    if (selectedAttributeCell) {
-        const rollNumber = parseInt(selectedAttributeCell.dataset.roll);
-        const position = parseInt(selectedAttributeCell.dataset.position);
-        
-        // Handle the current incomplete roll differently
-        if (rollNumber === currentRoll.number) {
-            currentRoll.attributes[position] = attribute.id;
-            saveIncompleteRoll(); // Save immediately
-            // Only reset current roll if it's complete
+        if (selectedWeapon) {
+            var standardKey = selectedWeapon.id;
+            var gogmaKey = 'gogma-' + selectedWeapon.id;
+
+            if (importedWeapons.indexOf(standardKey) !== -1 || importedWeapons.indexOf(gogmaKey) !== -1) {
+                if (GogmaMain.isGogmaMode()) {
+                    loadGogmaConfigPanel();
+                }
+                loadWeaponRolls();
+            }
+        }
+    });
+
+    // Listen for attribute selection
+    document.addEventListener('attributeSelected', function(event) {
+        var attribute = event.detail;
+        var clickedButton = document.querySelector('.attribute-btn[data-attribute-id="' + attribute.id + '"]');
+
+        if (!selectedWeapon) {
+            clickedButton.classList.add('error');
+            setTimeout(function() {
+                clickedButton.classList.remove('error');
+            }, 500);
+            return;
+        }
+
+        // In Gogma mode, require focus type to be selected first
+        if (GogmaMain.isGogmaMode() && currentGogmaConfig && !currentGogmaConfig.focusType) {
+            showError('Please select a Focus Type before adding rolls');
+            clickedButton.classList.add('error');
+            setTimeout(function() {
+                clickedButton.classList.remove('error');
+            }, 500);
+            return;
+        }
+
+        // If a cell is selected, update it (but only for complete saved rolls, not the current incomplete roll)
+        if (selectedAttributeCell) {
+            var rollNumber = parseInt(selectedAttributeCell.dataset.roll);
+            var position = parseInt(selectedAttributeCell.dataset.position);
+
+            // For the current incomplete roll, don't edit - fall through to add new attribute
+            if (rollNumber === currentRoll.number && currentRoll.attributes.length < 5) {
+                selectedAttributeCell.classList.remove('selected');
+                selectedAttributeCell = null;
+                // Fall through to add new attribute below
+            } else if (rollNumber === currentRoll.number) {
+                // Only allow editing current roll if it's complete (5 attributes)
+                if (GogmaMain.isGogmaMode()) {
+                    var existingTier = (currentRoll.attributes[position] && currentRoll.attributes[position].tier) || 'I';
+                    currentRoll.attributes[position] = { id: attribute.id, tier: existingTier };
+                } else {
+                    currentRoll.attributes[position] = attribute.id;
+                }
+                saveIncompleteRoll();
+                selectedAttributeCell.classList.remove('selected');
+                selectedAttributeCell = null;
+                updateDisplay();
+                return;
+            } else {
+                try {
+                    var storageKey = GogmaMain.getStorageKey(selectedWeapon.id);
+
+                    if (GogmaMain.isGogmaMode()) {
+                        var config = GogmaMain.initGogmaConfig(selectedWeapon.id);
+                        var roll = config.rolls.find(function(r) { return r.number === rollNumber; });
+
+                        if (roll) {
+                            var existTier = (roll.attributes[position] && roll.attributes[position].tier) || 'I';
+                            roll.attributes[position] = { id: attribute.id, tier: existTier };
+                            GogmaMain.saveGogmaConfig(selectedWeapon.id, config);
+                        }
+                    } else {
+                        var rolls = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                        var stdRoll = rolls.find(function(r) { return r.number === rollNumber; });
+
+                        if (stdRoll) {
+                            stdRoll.attributes[position] = attribute.id;
+                            localStorage.setItem(storageKey, JSON.stringify(rolls));
+                        }
+                    }
+                } catch (error) {
+                    showError('Error updating roll: ' + error.message);
+                }
+                selectedAttributeCell.classList.remove('selected');
+                selectedAttributeCell = null;
+                updateDisplay();
+                return;
+            }
+            // If we reach here, it's the fall-through case for incomplete current roll
+            // selectedAttributeCell was already cleared above, continue to add new attribute
+        }
+
+        // Add new attribute to current roll
+        if (currentRoll.attributes.length < 5) {
+            if (GogmaMain.isGogmaMode()) {
+                currentRoll.attributes.push({ id: attribute.id, tier: 'I' });
+            } else {
+                currentRoll.attributes.push(attribute.id);
+            }
+            saveIncompleteRoll();
+
             if (currentRoll.attributes.length === 5) {
                 currentRoll = {
                     number: currentRoll.number + 1,
                     attributes: []
                 };
             }
-        } else {
-            // Handle completed rolls in localStorage
-            try {
-                const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-                const roll = rolls.find(r => r.number === rollNumber);
-                
-                if (roll) {
-                    roll.attributes[position] = attribute.id;
-                    localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
-                }
-            } catch (error) {
-                showError(`Error updating roll: ${error.message}`);
-            }
-        }
-        
-        selectedAttributeCell.classList.remove('selected');
-        selectedAttributeCell = null;
-        updateDisplay();
-        return;
-    }
 
-    // Add new attribute to current roll
-    if (currentRoll.attributes.length < 5) {
-        currentRoll.attributes.push(attribute.id);
-        saveIncompleteRoll(); // Save immediately
-        
-        if (currentRoll.attributes.length === 5) {
-            currentRoll = {
-                number: currentRoll.number + 1,
-                attributes: []
-            };
-        }
-        
-        updateDisplay();
-    }
-});
-
-// Helper function to show error messages
-function showError(message) {
-    if (errorMessageElement) {
-        errorMessageElement.textContent = message;
-        errorMessageElement.style.display = 'block';
-        
-        // Hide error after 5 seconds
-        setTimeout(() => {
-            errorMessageElement.style.display = 'none';
-        }, 5000);
-    } else {
-        console.error(message);
-    }
-}
-
-// Add this new function to handle display updates
-function updateDisplay() {
-    if (!selectedWeapon) return;
-    
-    try {
-        const storedData = localStorage.getItem(selectedWeapon.id);
-        // If no data exists, just clear the table and return
-        if (!storedData) {
-            const tbody = document.getElementById('rolls-body');
-            tbody.innerHTML = '';
-            return;
-        }
-        
-        let rolls;
-        try {
-            rolls = JSON.parse(storedData);
-        } catch (error) {
-            showError(`Error loading data for ${selectedWeapon.name}. Data may be corrupted.`);
-            const tbody = document.getElementById('rolls-body');
-            tbody.innerHTML = '';
-            return;
-        }
-        
-        // Filter out any null or undefined entries or empty attribute arrays
-        rolls = rolls.filter(roll => roll && roll.attributes && roll.attributes.length > 0);
-        
-        // If after filtering there are no rolls with attributes, remove the entry from localStorage
-        if (rolls.length === 0) {
-            localStorage.removeItem(selectedWeapon.id);
-            const tbody = document.getElementById('rolls-body');
-            tbody.innerHTML = '';
-            return;
-        }
-        
-        // Reorder roll numbers including incomplete rolls
-        let nextNumber = 1;
-        rolls.sort((a, b) => a.number - b.number).forEach(roll => {
-            roll.number = nextNumber++;
-        });
-        
-        // Save reordered rolls back to storage
-        localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
-        
-        const tbody = document.getElementById('rolls-body');
-        tbody.innerHTML = '';
-        
-        // Sort rolls based on the current sort direction
-        const displayRolls = [...rolls];
-        if (!sortAscending) {
-            displayRolls.sort((a, b) => b.number - a.number);
-        }
-        
-        // Display all rolls
-        displayRolls.forEach(roll => {
-            tbody.appendChild(createRollRow(roll));
-        });
-        
-        // Reset current roll number if needed
-        if (currentRoll.attributes.length === 0) {
-            currentRoll.number = nextNumber;
-        }
-        
-        // Update sort direction text and attributes without animations
-        const sortToggle = document.getElementById('sort-toggle');
-        const sortDirectionEl = document.getElementById('sort-direction');
-        
-        if (sortToggle && sortDirectionEl) {
-            sortDirectionEl.textContent = sortAscending ? 'Ascending' : 'Descending';
-            sortToggle.setAttribute('data-order', sortAscending ? 'ascending' : 'descending');
-        }
-    } catch (error) {
-        showError(`Error updating display: ${error.message}`);
-    }
-}
-
-function loadWeaponRolls() {
-    if (!selectedWeapon) return;
-    
-    try {
-        // Get stored data if exists, but don't create an entry if there's no data
-        const storedData = localStorage.getItem(selectedWeapon.id);
-        
-        // Handle possible corrupt data
-        let rolls = [];
-        if (storedData) {
-            try {
-                rolls = JSON.parse(storedData);
-            } catch (error) {
-                showError(`Error loading data for ${selectedWeapon.name}. Data may be corrupted.`);
-                return;
-            }
-        }
-        
-        // Find incomplete roll if it exists
-        const incompleteRoll = rolls.find(r => r.attributes.length < 5);
-        
-        if (incompleteRoll) {
-            currentRoll = incompleteRoll;
-        } else {
-            currentRoll = {
-                number: (rolls.length > 0 ? rolls[rolls.length - 1].number + 1 : 1),
-                attributes: []
-            };
-        }
-        
-        // Only update display if there are rolls with data
-        if (rolls.length > 0) {
             updateDisplay();
-        } else {
-            // Clear the table if there's no data
-            const tbody = document.getElementById('rolls-body');
-            tbody.innerHTML = '';
-        }
-    } catch (error) {
-        showError(`Error loading weapon data: ${error.message}`);
-    }
-}
-
-// Update the createRollRow function
-function createRollRow(roll) {
-    const row = document.createElement('tr');
-    
-    // Add the roll number cell
-    const numberCell = document.createElement('td');
-    numberCell.className = 'number-cell';
-    numberCell.textContent = roll.number;
-    
-    // Add click handler for the number cell
-    numberCell.addEventListener('click', (e) => {
-        const allNumberCells = document.querySelectorAll('.number-cell');
-        
-        if (numberCell.classList.contains('delete-mode')) {
-            // Delete the roll
-            try {
-                const rolls = JSON.parse(localStorage.getItem(selectedWeapon.id) || '[]');
-                
-                // If this is the current incomplete roll, reset it
-                if (roll.number === currentRoll.number) {
-                    currentRoll = {
-                        number: roll.number,
-                        attributes: []
-                    };
-                }
-                
-                // Remove the roll and save
-                const updatedRolls = rolls.filter(r => r.number !== roll.number);
-                localStorage.setItem(selectedWeapon.id, JSON.stringify(updatedRolls));
-                
-                updateDisplay();
-            } catch (error) {
-                showError(`Error deleting roll: ${error.message}`);
-            }
-        } else {
-            // Toggle delete mode
-            allNumberCells.forEach(cell => {
-                if (cell !== numberCell && cell.classList.contains('delete-mode')) {
-                    cell.classList.remove('delete-mode');
-                    cell.textContent = cell.dataset.rollNumber;
-                }
-            });
-            numberCell.dataset.rollNumber = roll.number;
-            numberCell.textContent = 'Delete';
-            numberCell.classList.add('delete-mode');
         }
     });
 
-    row.appendChild(numberCell);
-    
-    // Add the attribute cells
-    for (let i = 0; i < 5; i++) {
-        const cell = document.createElement('td');
-        cell.className = 'attribute-cell';
-        cell.setAttribute('data-roll', roll.number);
-        cell.setAttribute('data-position', i);
-        
-        const attributeId = roll.attributes[i];
-        if (attributeId) {
-            const attribute = getAttributeById(attributeId);
-            if (attribute) {
-                const content = document.createElement('div');
-                content.className = 'attribute-content';
-                content.innerHTML = `
-                    <img src="${attribute.icon}" alt="${attribute.name}" 
-                         onerror="this.style.display='none'">
-                    <span>${attribute.name}</span>
-                `;
-                cell.appendChild(content);
-            }
-        }
-        
-        cell.addEventListener('click', () => {
-            if (selectedAttributeCell) {
-                selectedAttributeCell.classList.remove('selected');
-            }
-            cell.classList.add('selected');
-            selectedAttributeCell = cell;
-        });
-        
-        row.appendChild(cell);
-    }
-    
-    return row;
-}
-
-function saveIncompleteRoll() {
-    if (!selectedWeapon || !currentRoll.attributes.length) return;
-    
-    try {
-        const storedData = localStorage.getItem(selectedWeapon.id);
-        const rolls = storedData ? JSON.parse(storedData) : [];
-        
-        const existingRollIndex = rolls.findIndex(r => r.number === currentRoll.number);
-        
-        if (existingRollIndex >= 0) {
-            rolls[existingRollIndex] = currentRoll;
+    function showError(message) {
+        if (errorMessageElement) {
+            errorMessageElement.textContent = message;
+            errorMessageElement.style.display = 'block';
+            setTimeout(function() {
+                errorMessageElement.style.display = 'none';
+            }, 5000);
         } else {
-            rolls.push(currentRoll);
+            console.error(message);
         }
-        
-        // Only save if there's actual data
-        if (rolls.some(roll => roll.attributes.length > 0)) {
-            localStorage.setItem(selectedWeapon.id, JSON.stringify(rolls));
-        }
-    } catch (error) {
-        showError(`Error saving roll: ${error.message}`);
     }
-}
 
-// At the end of the file, wrap the delete button event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize the error message element reference
-    errorMessageElement = document.getElementById('error-message');
+    function updateDisplay() {
+        if (!selectedWeapon) return;
 
-    const deleteWeaponBtn = document.getElementById('delete-weapon');
-    if (deleteWeaponBtn) {
-        deleteWeaponBtn.addEventListener('click', function() {
-            if (!selectedWeapon) {
-                this.classList.add('error');
-                this.textContent = 'Select a weapon first';
-                
-                setTimeout(() => {
-                    this.classList.remove('error');
-                    this.textContent = 'Delete Weapon Data';
-                }, 2000);
+        updateTableHeaders();
+
+        try {
+            var storageKey = GogmaMain.getStorageKey(selectedWeapon.id);
+            var rolls;
+
+            if (GogmaMain.isGogmaMode()) {
+                var config = GogmaMain.initGogmaConfig(selectedWeapon.id);
+                rolls = config.rolls || [];
+            } else {
+                var storedData = localStorage.getItem(storageKey);
+                if (!storedData) {
+                    var tbody = document.getElementById('rolls-body');
+                    tbody.innerHTML = '';
+                    selectedAttributeCell = null;
+                    return;
+                }
+
+                try {
+                    rolls = JSON.parse(storedData);
+                } catch (error) {
+                    showError('Error loading data for ' + selectedWeapon.name + '. Data may be corrupted.');
+                    var tbody = document.getElementById('rolls-body');
+                    tbody.innerHTML = '';
+                    selectedAttributeCell = null;
+                    return;
+                }
+            }
+
+            rolls = rolls.filter(function(roll) {
+                return roll && roll.attributes && roll.attributes.length > 0;
+            });
+
+            if (rolls.length === 0) {
+                if (!GogmaMain.isGogmaMode()) {
+                    localStorage.removeItem(storageKey);
+                }
+                var tbody = document.getElementById('rolls-body');
+                tbody.innerHTML = '';
+                selectedAttributeCell = null;
                 return;
             }
 
-            if (this.classList.contains('confirm')) {
-                // Second click - perform deletion
-                localStorage.removeItem(selectedWeapon.id);
-                currentRoll = {
-                    number: 1,
-                    attributes: []
-                };
-                updateDisplay();
-                this.classList.remove('confirm');
-                this.textContent = 'Delete Weapon Data';
-                if (deleteWeaponClickTimeout) {
-                    clearTimeout(deleteWeaponClickTimeout);
-                }
+            var nextNumber = 1;
+            rolls.sort(function(a, b) { return a.number - b.number; }).forEach(function(roll) {
+                roll.number = nextNumber++;
+            });
+
+            if (GogmaMain.isGogmaMode()) {
+                var config = GogmaMain.initGogmaConfig(selectedWeapon.id);
+                config.rolls = rolls;
+                GogmaMain.saveGogmaConfig(selectedWeapon.id, config);
             } else {
-                // First click - show confirmation state
-                this.classList.add('confirm');
-                this.textContent = `Click again to delete ${selectedWeapon.name}`;
-                
-                // Reset after 3 seconds
-                deleteWeaponClickTimeout = setTimeout(() => {
-                    this.classList.remove('confirm');
-                    this.textContent = 'Delete Weapon Data';
-                }, 3000);
+                localStorage.setItem(storageKey, JSON.stringify(rolls));
             }
-        });
-    }
 
-    const deleteAllBtn = document.getElementById('delete-all');
-    if (deleteAllBtn) {
-        deleteAllBtn.addEventListener('click', function() {
-            if (this.classList.contains('confirm')) {
-                // Second click - perform deletion
-                // Store the selected weapon reference before clearing localStorage
-                const currentWeaponId = selectedWeapon ? selectedWeapon.id : null;
-                
-                localStorage.clear();
-                
-                // Reset current roll
-                currentRoll = {
-                    number: 1,
-                    attributes: []
-                };
-                
-                // Do NOT clear selectedWeapon
+            var tbody = document.getElementById('rolls-body');
+            tbody.innerHTML = '';
+            selectedAttributeCell = null;
 
-                // Clear the table
-                const tbody = document.getElementById('rolls-body');
-                tbody.innerHTML = '';
-
-                this.classList.remove('confirm');
-                this.textContent = 'Delete All Data';
-                if (deleteAllClickTimeout) {
-                    clearTimeout(deleteAllClickTimeout);
-                }
-            } else {
-                // First click - show confirmation state
-                this.classList.add('confirm');
-                this.textContent = 'Click again to delete ALL data';
-                
-                // Reset after 3 seconds
-                deleteAllClickTimeout = setTimeout(() => {
-                    this.classList.remove('confirm');
-                    this.textContent = 'Delete All Data';
-                }, 3000);
+            var displayRolls = rolls.slice();
+            if (!sortAscending) {
+                displayRolls.sort(function(a, b) { return b.number - a.number; });
             }
-        });
-    }
 
-    // Add the sort toggle button event listener with proper sorting implementation
-    const sortToggle = document.getElementById('sort-toggle');
-    if (sortToggle) {
-        sortToggle.addEventListener('click', function() {
-            sortAscending = !sortAscending;
-            
-            // Make sure sort direction is immediately updated for tests
-            const sortDirectionEl = document.getElementById('sort-direction');
-            if (sortDirectionEl) {
+            displayRolls.forEach(function(roll) {
+                tbody.appendChild(createRollRow(roll));
+            });
+
+            if (currentRoll.attributes.length === 0) {
+                currentRoll.number = nextNumber;
+            }
+
+            var sortToggle = document.getElementById('sort-toggle');
+            var sortDirectionEl = document.getElementById('sort-direction');
+
+            if (sortToggle && sortDirectionEl) {
                 sortDirectionEl.textContent = sortAscending ? 'Ascending' : 'Descending';
+                sortToggle.setAttribute('data-order', sortAscending ? 'ascending' : 'descending');
             }
-            
-            this.setAttribute('data-order', sortAscending ? 'ascending' : 'descending');
-            
-            // Update the display with the new sort order
-            updateDisplay();
-        });
+        } catch (error) {
+            showError('Error updating display: ' + error.message);
+        }
     }
-});
+
+    function updateTableHeaders() {
+        var thead = document.querySelector('#rolls-table thead tr');
+        if (!thead) return;
+
+        if (GogmaMain.isGogmaMode()) {
+            document.body.classList.add('gogma-mode');
+            thead.innerHTML =
+                '<th>Num.</th>' +
+                '<th>Attr 1</th><th>Tier</th>' +
+                '<th>Attr 2</th><th>Tier</th>' +
+                '<th>Attr 3</th><th>Tier</th>' +
+                '<th>Attr 4</th><th>Tier</th>' +
+                '<th>Attr 5</th><th>Tier</th>';
+        } else {
+            document.body.classList.remove('gogma-mode');
+            thead.innerHTML =
+                '<th>Num.</th>' +
+                '<th>Attribute 1</th>' +
+                '<th>Attribute 2</th>' +
+                '<th>Attribute 3</th>' +
+                '<th>Attribute 4</th>' +
+                '<th>Attribute 5</th>';
+        }
+    }
+
+    function loadWeaponRolls() {
+        if (!selectedWeapon) return;
+
+        try {
+            var rolls = [];
+
+            if (GogmaMain.isGogmaMode()) {
+                currentGogmaConfig = GogmaMain.initGogmaConfig(selectedWeapon.id);
+                rolls = currentGogmaConfig.rolls || [];
+            } else {
+                var storageKey = GogmaMain.getStorageKey(selectedWeapon.id);
+                var storedData = localStorage.getItem(storageKey);
+
+                if (storedData) {
+                    try {
+                        rolls = JSON.parse(storedData);
+                    } catch (error) {
+                        showError('Error loading data for ' + selectedWeapon.name + '. Data may be corrupted.');
+                        return;
+                    }
+                }
+            }
+
+            var incompleteRoll = rolls.find(function(r) { return r.attributes.length < 5; });
+
+            if (incompleteRoll) {
+                currentRoll = incompleteRoll;
+            } else {
+                currentRoll = {
+                    number: (rolls.length > 0 ? rolls[rolls.length - 1].number + 1 : 1),
+                    attributes: []
+                };
+            }
+
+            updateTableHeaders();
+
+            if (rolls.length > 0) {
+                updateDisplay();
+            } else {
+                var tbody = document.getElementById('rolls-body');
+                tbody.innerHTML = '';
+                selectedAttributeCell = null;
+            }
+        } catch (error) {
+            showError('Error loading weapon data: ' + error.message);
+        }
+    }
+
+    function createRollRow(roll) {
+        var row = document.createElement('tr');
+
+        var numberCell = document.createElement('td');
+        numberCell.className = 'number-cell';
+        numberCell.textContent = roll.number;
+
+        numberCell.addEventListener('click', function() {
+            var allNumberCells = document.querySelectorAll('.number-cell');
+
+            if (numberCell.classList.contains('delete-mode')) {
+                try {
+                    if (roll.number === currentRoll.number) {
+                        currentRoll = {
+                            number: roll.number,
+                            attributes: []
+                        };
+                    }
+
+                    if (GogmaMain.isGogmaMode()) {
+                        var config = GogmaMain.initGogmaConfig(selectedWeapon.id);
+                        config.rolls = config.rolls.filter(function(r) { return r.number !== roll.number; });
+                        GogmaMain.saveGogmaConfig(selectedWeapon.id, config);
+                    } else {
+                        var storageKey = GogmaMain.getStorageKey(selectedWeapon.id);
+                        var rolls = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                        var updatedRolls = rolls.filter(function(r) { return r.number !== roll.number; });
+                        localStorage.setItem(storageKey, JSON.stringify(updatedRolls));
+                    }
+
+                    updateDisplay();
+                } catch (error) {
+                    showError('Error deleting roll: ' + error.message);
+                }
+            } else {
+                allNumberCells.forEach(function(cell) {
+                    if (cell !== numberCell && cell.classList.contains('delete-mode')) {
+                        cell.classList.remove('delete-mode');
+                        cell.textContent = cell.dataset.rollNumber;
+                    }
+                });
+                numberCell.dataset.rollNumber = roll.number;
+                numberCell.textContent = 'Delete';
+                numberCell.classList.add('delete-mode');
+            }
+        });
+
+        row.appendChild(numberCell);
+
+        for (var i = 0; i < 5; i++) {
+            var cell = document.createElement('td');
+            cell.className = 'attribute-cell';
+            cell.setAttribute('data-roll', roll.number);
+            cell.setAttribute('data-position', i);
+
+            var attributeId = null;
+            var tier = null;
+
+            if (GogmaMain.isGogmaMode()) {
+                var attrData = roll.attributes[i];
+                if (attrData) {
+                    attributeId = attrData.id;
+                    tier = attrData.tier || 'I';
+                }
+            } else {
+                attributeId = roll.attributes[i] || null;
+            }
+
+            if (attributeId) {
+                var attribute = getAttributeById(attributeId);
+                if (attribute) {
+                    var content = document.createElement('div');
+                    content.className = 'attribute-content';
+                    content.innerHTML =
+                        '<img src="' + attribute.icon + '" alt="' + attribute.name + '" onerror="this.style.display=\'none\'">' +
+                        '<span>' + attribute.name + '</span>';
+                    cell.appendChild(content);
+                }
+            }
+
+            (function(cellRef) {
+                cellRef.addEventListener('click', function() {
+                    if (selectedAttributeCell) {
+                        selectedAttributeCell.classList.remove('selected');
+                    }
+                    cellRef.classList.add('selected');
+                    selectedAttributeCell = cellRef;
+                });
+            })(cell);
+
+            row.appendChild(cell);
+
+            if (GogmaMain.isGogmaMode()) {
+                var tierCell = document.createElement('td');
+                tierCell.className = 'tier-cell';
+
+                if (attributeId) {
+                    var tierSelect = document.createElement('select');
+                    tierSelect.className = 'tier-select';
+                    tierSelect.setAttribute('data-roll', roll.number);
+                    tierSelect.setAttribute('data-position', i);
+
+                    GogmaMain.reinforcementTiers.forEach(function(t) {
+                        var option = document.createElement('option');
+                        option.value = t;
+                        option.textContent = t;
+                        if (tier === t) {
+                            option.selected = true;
+                        }
+                        tierSelect.appendChild(option);
+                    });
+
+                    tierSelect.addEventListener('change', function(e) {
+                        var newTier = e.target.value;
+                        var rollNum = parseInt(e.target.getAttribute('data-roll'));
+                        var pos = parseInt(e.target.getAttribute('data-position'));
+
+                        if (rollNum === currentRoll.number) {
+                            if (currentRoll.attributes[pos]) {
+                                currentRoll.attributes[pos].tier = newTier;
+                                saveIncompleteRoll();
+                            }
+                        } else {
+                            GogmaMain.updateGogmaTier(selectedWeapon.id, rollNum, pos, newTier);
+                        }
+                    });
+
+                    tierCell.appendChild(tierSelect);
+                }
+
+                row.appendChild(tierCell);
+            }
+        }
+
+        return row;
+    }
+
+    function saveIncompleteRoll() {
+        if (!selectedWeapon || !currentRoll.attributes.length) return;
+
+        try {
+            if (GogmaMain.isGogmaMode()) {
+                var config = GogmaMain.initGogmaConfig(selectedWeapon.id);
+                var rolls = config.rolls || [];
+
+                var existingRollIndex = rolls.findIndex(function(r) { return r.number === currentRoll.number; });
+
+                if (existingRollIndex >= 0) {
+                    rolls[existingRollIndex] = currentRoll;
+                } else {
+                    rolls.push(currentRoll);
+                }
+
+                config.rolls = rolls;
+                GogmaMain.saveGogmaConfig(selectedWeapon.id, config);
+            } else {
+                var storageKey = GogmaMain.getStorageKey(selectedWeapon.id);
+                var storedData = localStorage.getItem(storageKey);
+                var rolls = storedData ? JSON.parse(storedData) : [];
+
+                var existingRollIndex = rolls.findIndex(function(r) { return r.number === currentRoll.number; });
+
+                if (existingRollIndex >= 0) {
+                    rolls[existingRollIndex] = currentRoll;
+                } else {
+                    rolls.push(currentRoll);
+                }
+
+                if (rolls.some(function(roll) { return roll.attributes.length > 0; })) {
+                    localStorage.setItem(storageKey, JSON.stringify(rolls));
+                }
+            }
+        } catch (error) {
+            showError('Error saving roll: ' + error.message);
+        }
+    }
+
+    function loadGogmaConfigPanel() {
+        if (!selectedWeapon) return;
+
+        currentGogmaConfig = GogmaMain.initGogmaConfig(selectedWeapon.id);
+
+        var focusButtonsContainer = document.getElementById('focus-buttons');
+        var setBonusSelect = document.getElementById('set-bonus-select');
+        var groupSkillSelect = document.getElementById('group-skill-select');
+
+        if (focusButtonsContainer) {
+            GogmaMain.populateFocusButtons(focusButtonsContainer, currentGogmaConfig.focusType, function(focusId) {
+                if (currentGogmaConfig.focusType && currentGogmaConfig.rolls && currentGogmaConfig.rolls.length > 0) {
+                    if (!confirm('Changing focus type will not affect existing rolls. Continue?')) {
+                        return;
+                    }
+                }
+
+                currentGogmaConfig.focusType = focusId;
+                GogmaMain.saveGogmaConfig(selectedWeapon.id, currentGogmaConfig);
+
+                focusButtonsContainer.querySelectorAll('.focus-btn').forEach(function(btn) {
+                    btn.classList.toggle('selected', btn.getAttribute('data-focus') === focusId);
+                });
+            });
+        }
+
+        if (setBonusSelect && groupSkillSelect) {
+            GogmaMain.populateSkillDropdowns(setBonusSelect, groupSkillSelect, currentGogmaConfig, function(field, value) {
+                currentGogmaConfig[field] = value;
+                GogmaMain.saveGogmaConfig(selectedWeapon.id, currentGogmaConfig);
+            });
+        }
+    }
+
+    // Initialize on DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+        errorMessageElement = document.getElementById('error-message');
+
+        var savedMode = GogmaMain.loadSavedMode();
+        var modeStandard = document.getElementById('mode-standard');
+        var modeGogma = document.getElementById('mode-gogma');
+        var gogmaConfig = document.getElementById('gogma-config');
+
+        if (savedMode && modeGogma && modeStandard) {
+            modeGogma.classList.add('selected');
+            modeStandard.classList.remove('selected');
+        }
+
+        if (modeStandard) {
+            modeStandard.addEventListener('click', function() {
+                GogmaMain.setGogmaMode(false);
+                modeStandard.classList.add('selected');
+                modeGogma.classList.remove('selected');
+                if (gogmaConfig) {
+                    gogmaConfig.style.display = 'none';
+                }
+                updateTableHeaders();
+                if (selectedWeapon) {
+                    loadWeaponRolls();
+                }
+            });
+        }
+
+        if (modeGogma) {
+            modeGogma.addEventListener('click', function() {
+                GogmaMain.setGogmaMode(true);
+                modeGogma.classList.add('selected');
+                modeStandard.classList.remove('selected');
+                if (selectedWeapon && gogmaConfig) {
+                    gogmaConfig.style.display = 'block';
+                    loadGogmaConfigPanel();
+                }
+                updateTableHeaders();
+                if (selectedWeapon) {
+                    loadWeaponRolls();
+                }
+            });
+        }
+
+        var deleteWeaponBtn = document.getElementById('delete-weapon');
+        if (deleteWeaponBtn) {
+            deleteWeaponBtn.addEventListener('click', function() {
+                var btn = this;
+                if (!selectedWeapon) {
+                    btn.classList.add('error');
+                    btn.textContent = 'Select a weapon first';
+                    setTimeout(function() {
+                        btn.classList.remove('error');
+                        btn.textContent = 'Delete Weapon Data';
+                    }, 2000);
+                    return;
+                }
+
+                if (btn.classList.contains('confirm')) {
+                    var storageKey = GogmaMain.getStorageKey(selectedWeapon.id);
+                    localStorage.removeItem(storageKey);
+
+                    currentRoll = {
+                        number: 1,
+                        attributes: []
+                    };
+
+                    if (GogmaMain.isGogmaMode()) {
+                        currentGogmaConfig = {
+                            focusType: null,
+                            setBonusSkill: null,
+                            groupSkill: null,
+                            rolls: []
+                        };
+                        loadGogmaConfigPanel();
+                    }
+
+                    updateDisplay();
+                    btn.classList.remove('confirm');
+                    btn.textContent = 'Delete Weapon Data';
+                    if (deleteWeaponClickTimeout) {
+                        clearTimeout(deleteWeaponClickTimeout);
+                    }
+                } else {
+                    btn.classList.add('confirm');
+                    btn.textContent = 'Click again to delete ' + selectedWeapon.name;
+                    deleteWeaponClickTimeout = setTimeout(function() {
+                        btn.classList.remove('confirm');
+                        btn.textContent = 'Delete Weapon Data';
+                    }, 3000);
+                }
+            });
+        }
+
+        var deleteAllBtn = document.getElementById('delete-all');
+        if (deleteAllBtn) {
+            deleteAllBtn.addEventListener('click', function() {
+                var btn = this;
+                if (btn.classList.contains('confirm')) {
+                    localStorage.clear();
+
+                    currentRoll = {
+                        number: 1,
+                        attributes: []
+                    };
+
+                    currentGogmaConfig = null;
+
+                    var tbody = document.getElementById('rolls-body');
+                    tbody.innerHTML = '';
+                    selectedAttributeCell = null;
+
+                    if (GogmaMain.isGogmaMode() && selectedWeapon) {
+                        loadGogmaConfigPanel();
+                    }
+
+                    btn.classList.remove('confirm');
+                    btn.textContent = 'Delete All Data';
+                    if (deleteAllClickTimeout) {
+                        clearTimeout(deleteAllClickTimeout);
+                    }
+                } else {
+                    btn.classList.add('confirm');
+                    btn.textContent = 'Click again to delete ALL data';
+                    deleteAllClickTimeout = setTimeout(function() {
+                        btn.classList.remove('confirm');
+                        btn.textContent = 'Delete All Data';
+                    }, 3000);
+                }
+            });
+        }
+
+        var sortToggle = document.getElementById('sort-toggle');
+        if (sortToggle) {
+            sortToggle.addEventListener('click', function() {
+                sortAscending = !sortAscending;
+
+                var sortDirectionEl = document.getElementById('sort-direction');
+                if (sortDirectionEl) {
+                    sortDirectionEl.textContent = sortAscending ? 'Ascending' : 'Descending';
+                }
+
+                this.setAttribute('data-order', sortAscending ? 'ascending' : 'descending');
+                updateDisplay();
+            });
+        }
+    });
+})();

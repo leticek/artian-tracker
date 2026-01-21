@@ -6,12 +6,19 @@
     <title>Weapon Roll Tracker</title>
     <link rel="stylesheet" href="./src/styles/main.css">
     <link rel="stylesheet" href="./src/styles/responsive.css">
+    <link rel="stylesheet" href="./src/styles/gogma.css">
 </head>
 <body>
     <header>
         <h1>Weapon Roll Tracker</h1>
     </header>
     <main>
+        <section id="mode-selection">
+            <div class="mode-toggle">
+                <button id="mode-standard" class="mode-btn selected">Standard Artian</button>
+                <button id="mode-gogma" class="mode-btn">Gogma Artian</button>
+            </div>
+        </section>
         <section id="weapon-selection">
             <div id="weapon-buttons" class="weapon-grid">
             </div>
@@ -19,6 +26,30 @@
         <section id="attribute-selection">
             <div id="attribute-buttons">
                 <!-- Attribute buttons will be populated here -->
+            </div>
+        </section>
+        <section id="gogma-config" style="display: none;">
+            <div class="gogma-settings">
+                <div class="focus-selection">
+                    <h3>Focus Type</h3>
+                    <div id="focus-buttons">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="skill-selection">
+                    <div class="skill-group">
+                        <label for="set-bonus-select">Set Bonus Skill</label>
+                        <select id="set-bonus-select">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                    <div class="skill-group">
+                        <label for="group-skill-select">Group Skill</label>
+                        <select id="group-skill-select">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </section>
         <section id="rolls-table">
@@ -89,11 +120,13 @@
             </div>
         </section>
     </main>
-    <!-- Add script files -->
-    <script type="module" src="./src/scripts/weapons.js"></script>
-    <script type="module" src="./src/scripts/attributes.js"></script>
-    <script type="module" src="./src/scripts/main.js"></script>
-    <script type="module" src="./src/scripts/import-export.js"></script>
+    <!-- Script files - order matters: dependencies first -->
+    <script src="./src/scripts/gogma-data.js"></script>
+    <script src="./src/scripts/attributes.js"></script>
+    <script src="./src/scripts/gogma-main.js"></script>
+    <script src="./src/scripts/weapons.js"></script>
+    <script src="./src/scripts/main.js"></script>
+    <script src="./src/scripts/import-export.js"></script>
     <hr class="footer-divider">
     <footer class="bmc-footer">
         <div class="bmc-btn-container">
