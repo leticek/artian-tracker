@@ -431,11 +431,23 @@
                     tierSelect.setAttribute('data-roll', roll.number);
                     tierSelect.setAttribute('data-position', i);
 
-                    GogmaMain.reinforcementTiers.forEach(function(t) {
+                    // Get available tiers for this attribute (filter out null values)
+                    var attrTierValues = window.GogmaData.tierValues[attributeId] || {};
+                    var availableTiers = GogmaMain.reinforcementTiers.filter(function(t) {
+                        return attrTierValues[t] !== null && attrTierValues[t] !== undefined;
+                    });
+
+                    // If saved tier is not valid for this attribute, use first available tier
+                    var selectedTier = tier;
+                    if (availableTiers.indexOf(tier) === -1 && availableTiers.length > 0) {
+                        selectedTier = availableTiers[0];
+                    }
+
+                    availableTiers.forEach(function(t) {
                         var option = document.createElement('option');
                         option.value = t;
                         option.textContent = t;
-                        if (tier === t) {
+                        if (selectedTier === t) {
                             option.selected = true;
                         }
                         tierSelect.appendChild(option);
