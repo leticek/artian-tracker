@@ -12,7 +12,8 @@
     attack:    { I: 5,  II: 6,  III: 9,  EX: 12 },
     affinity:  { I: 5,  II: 6,  III: 8,  EX: 10 },
     sharpness: { I: 30, II: null, III: null, EX: 50 },
-    element:   { I: 50, II: 60, III: 70, EX: 90 }
+    element:   { I: 50, II: 60, III: 70, EX: 90 },
+    ammo:      { I: 1,  II: null, III: null, EX: 2 }
   };
 
   const setBonusSkills = [

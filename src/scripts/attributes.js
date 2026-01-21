@@ -5,6 +5,7 @@
         { id: 'affinity', name: 'Affinity Boost', icon: './src/resources/affinity_icon.png' },
         { id: 'element', name: 'Element Boost', icon: './src/resources/element_icon.png' },
         { id: 'sharpness', name: 'Sharpness Boost', icon: './src/resources/sharpness_icon.webp' },
+        { id: 'ammo', name: 'Ammo Boost', icon: './src/resources/light_bowgun_icon.webp' },
     ];
 
     // Expose to global namespace
