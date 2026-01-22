@@ -184,6 +184,12 @@ describe('Data Migration', () => {
         Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
         document.body.innerHTML = `
+            <nav class="tab-bar">
+                <button class="tab-btn active" data-tab="artian">Artian Rolls</button>
+                <button class="tab-btn" data-tab="gogma">Gogma Rolls</button>
+            </nav>
+            <div id="artian-content" class="tab-content active"></div>
+            <div id="gogma-content" class="tab-content"></div>
             <div id="weapon-buttons"></div>
             <div id="attribute-buttons"></div>
             <table><tbody id="rolls-body"></tbody></table>
@@ -212,23 +218,27 @@ describe('Data Migration', () => {
         require('../../../src/scripts/main.js');
         document.dispatchEvent(new Event('DOMContentLoaded'));
 
-        // Check that DATA_VERSION was set
-        expect(localStorageMock.setItem).toHaveBeenCalledWith('DATA_VERSION', '2');
+        // Check that DATA_VERSION was set to 3 (current version)
+        expect(localStorageMock.setItem).toHaveBeenCalledWith('DATA_VERSION', '3');
 
-        // Check that data was migrated
+        // Check that data was migrated to v3 nested format with attribute migration
         const migratedData = JSON.parse(localStorageMock.store.bow);
-        expect(migratedData[0].attributes).toEqual([
+        expect(migratedData.artian[0].attributes).toEqual([
             'attack-I', 'affinity-I', 'element-I', 'sharpness-I', 'attack-I'
         ]);
+        expect(migratedData.gogma).toEqual([]);
     });
 
     test('should not re-migrate if DATA_VERSION is current', () => {
-        // Setup data with current version
+        // Setup data with current version (v3 nested format)
         localStorageMock.store = {
-            DATA_VERSION: '2',
-            bow: JSON.stringify([
-                { number: 1, attributes: ['attack-II', 'affinity-III'] }
-            ])
+            DATA_VERSION: '3',
+            bow: JSON.stringify({
+                artian: [
+                    { number: 1, attributes: ['attack-II', 'affinity-III'] }
+                ],
+                gogma: []
+            })
         };
 
         require('../../../src/scripts/main.js');
@@ -236,7 +246,7 @@ describe('Data Migration', () => {
 
         // Data should remain unchanged
         const data = JSON.parse(localStorageMock.store.bow);
-        expect(data[0].attributes).toEqual(['attack-II', 'affinity-III']);
+        expect(data.artian[0].attributes).toEqual(['attack-II', 'affinity-III']);
     });
 
     test('should handle mixed format data during migration', () => {
@@ -250,9 +260,10 @@ describe('Data Migration', () => {
         document.dispatchEvent(new Event('DOMContentLoaded'));
 
         const migratedData = JSON.parse(localStorageMock.store.bow);
-        expect(migratedData[0].attributes).toEqual([
+        expect(migratedData.artian[0].attributes).toEqual([
             'attack-I', 'attack-II', 'element-I'
         ]);
+        expect(migratedData.gogma).toEqual([]);
     });
 });
 
@@ -352,5 +363,122 @@ describe('Import Migration', () => {
 
         const storedData = JSON.parse(localStorageMock.store.bow);
         expect(storedData[0].attributes).toEqual(['attack-I', 'affinity-III', 'element-I', 'sharpness-EX']);
+    });
+});
+
+describe('Data Migration v2 to v3', () => {
+    let localStorageMock;
+
+    beforeEach(() => {
+        localStorageMock = {
+            store: {},
+            getItem: jest.fn(key => localStorageMock.store[key] || null),
+            setItem: jest.fn((key, value) => localStorageMock.store[key] = value),
+            removeItem: jest.fn(key => delete localStorageMock.store[key]),
+            clear: jest.fn(() => localStorageMock.store = {}),
+            key: jest.fn(i => Object.keys(localStorageMock.store)[i])
+        };
+
+        Object.defineProperty(localStorageMock, 'length', {
+            get: function() { return Object.keys(this.store).length; }
+        });
+
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+        document.body.innerHTML = `
+            <nav class="tab-bar">
+                <button class="tab-btn active" data-tab="artian">Artian Rolls</button>
+                <button class="tab-btn" data-tab="gogma">Gogma Rolls</button>
+            </nav>
+            <div id="artian-content" class="tab-content active"></div>
+            <div id="gogma-content" class="tab-content"></div>
+            <div id="weapon-buttons"></div>
+            <div id="attribute-buttons"></div>
+            <table><tbody id="rolls-body"></tbody></table>
+            <button id="delete-weapon">Delete Weapon Data</button>
+            <button id="delete-all">Delete All Data</button>
+            <button id="sort-toggle"><span id="sort-direction">Ascending</span></button>
+        `;
+
+        jest.resetModules();
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        document.body.innerHTML = '';
+    });
+
+    test('should migrate v2 flat data to v3 nested format', () => {
+        // Setup v2 data (flat array with leveled attributes)
+        localStorageMock.store = {
+            DATA_VERSION: '2',
+            bow: JSON.stringify([
+                { number: 1, attributes: ['attack-II', 'affinity-III', 'element-I', 'sharpness-EX', 'attack-I'] }
+            ])
+        };
+
+        require('../../../src/scripts/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        // Check that DATA_VERSION was updated to 3
+        expect(localStorageMock.setItem).toHaveBeenCalledWith('DATA_VERSION', '3');
+
+        // Check that data was migrated to nested format
+        const migratedData = JSON.parse(localStorageMock.store.bow);
+        expect(migratedData).toHaveProperty('artian');
+        expect(migratedData).toHaveProperty('gogma');
+        expect(migratedData.artian).toHaveLength(1);
+        expect(migratedData.gogma).toEqual([]);
+        expect(migratedData.artian[0].attributes).toEqual([
+            'attack-II', 'affinity-III', 'element-I', 'sharpness-EX', 'attack-I'
+        ]);
+    });
+
+    test('should migrate v1 data directly to v3 format', () => {
+        // Setup v1 data (flat array with legacy attribute format, no DATA_VERSION)
+        localStorageMock.store = {
+            bow: JSON.stringify([
+                { number: 1, attributes: ['attack', 'affinity', 'element', 'sharpness', 'attack'] }
+            ])
+        };
+
+        require('../../../src/scripts/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        // Check that DATA_VERSION was set to 3
+        expect(localStorageMock.setItem).toHaveBeenCalledWith('DATA_VERSION', '3');
+
+        // Check that data was migrated to v3 nested format with attribute migration
+        const migratedData = JSON.parse(localStorageMock.store.bow);
+        expect(migratedData).toHaveProperty('artian');
+        expect(migratedData).toHaveProperty('gogma');
+        expect(migratedData.artian).toHaveLength(1);
+        expect(migratedData.gogma).toEqual([]);
+        expect(migratedData.artian[0].attributes).toEqual([
+            'attack-I', 'affinity-I', 'element-I', 'sharpness-I', 'attack-I'
+        ]);
+    });
+
+    test('should not re-migrate if DATA_VERSION is 3', () => {
+        // Setup v3 data (nested format)
+        localStorageMock.store = {
+            DATA_VERSION: '3',
+            bow: JSON.stringify({
+                artian: [
+                    { number: 1, attributes: ['attack-II', 'affinity-III', 'element-I', 'sharpness-EX', 'attack-I'] }
+                ],
+                gogma: [
+                    { number: 1, groupSkill: 'skill-1', setBonus: 'bonus-1' }
+                ]
+            })
+        };
+
+        require('../../../src/scripts/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        // Data should remain unchanged
+        const data = JSON.parse(localStorageMock.store.bow);
+        expect(data.artian[0].attributes).toEqual(['attack-II', 'affinity-III', 'element-I', 'sharpness-EX', 'attack-I']);
+        expect(data.gogma[0]).toEqual({ number: 1, groupSkill: 'skill-1', setBonus: 'bonus-1' });
     });
 });
