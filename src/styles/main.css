@@ -651,3 +651,148 @@ textarea#import-data, textarea#export-data {
     margin: 0 auto;
     overflow-x: auto;
 }
+
+/* Tab Bar Styles */
+.tab-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    background: #35424a;
+    padding: 0;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 0 0 8px 8px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 24px;
+    background: #2a363d;
+    color: #aaa;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin: 0;
+    border-radius: 0;
+}
+
+.tab-btn:first-child {
+    border-radius: 0 0 0 8px;
+}
+
+.tab-btn:last-child {
+    border-radius: 0 0 8px 0;
+}
+
+.tab-btn:hover {
+    background: #3a4a53;
+    color: #fff;
+}
+
+.tab-btn.active {
+    background: #4a5d6a;
+    color: #fff;
+}
+
+/* Gogma Color Classes */
+.gogma-red {
+    background-color: #ffcdd2 !important;
+    border-color: #c62828 !important;
+}
+.gogma-red:hover {
+    background-color: #ffbcbc !important;
+}
+.gogma-red span {
+    color: #b71c1c;
+}
+
+.gogma-yellow {
+    background-color: #ffecb3 !important;
+    border-color: #ff8f00 !important;
+}
+.gogma-yellow:hover {
+    background-color: #ffe082 !important;
+}
+.gogma-yellow span {
+    color: #e65100;
+}
+
+.gogma-green {
+    background-color: #c8e6c9 !important;
+    border-color: #2e7d32 !important;
+}
+.gogma-green:hover {
+    background-color: #a5d6a7 !important;
+}
+.gogma-green span {
+    color: #1b5e20;
+}
+
+/* Gogma cell colors */
+.gogma-cell.gogma-red {
+    background-color: #ffcdd2;
+}
+.gogma-cell.gogma-yellow {
+    background-color: #ffecb3;
+}
+.gogma-cell.gogma-green {
+    background-color: #c8e6c9;
+}
+
+/* Gogma skill button sections */
+.gogma-skill-section {
+    margin-bottom: 0.5rem;
+}
+
+.gogma-skill-section h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gogma-skill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.gogma-skill-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.8rem;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.gogma-skill-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.gogma-skill-btn.selected {
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.2);
+}
+
+/* Tab content visibility */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Gogma table specific */
+#gogma-rolls-table .attribute-cell {
+    min-width: 180px;
+}
