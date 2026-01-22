@@ -40,6 +40,12 @@ describe('Weapon Roll Tracker', () => {
 
     // Setup DOM
     document.body.innerHTML = `
+      <nav class="tab-bar">
+        <button class="tab-btn active" data-tab="artian">Artian Rolls</button>
+        <button class="tab-btn" data-tab="gogma">Gogma Rolls</button>
+      </nav>
+      <div id="artian-content" class="tab-content active"></div>
+      <div id="gogma-content" class="tab-content"></div>
       <div id="weapon-buttons">
         ${mockWeapons.map(w => `<button class="weapon-btn" data-weapon-id="${w.id}">${w.name}</button>`).join('')}
       </div>
@@ -104,10 +110,14 @@ describe('Weapon Roll Tracker', () => {
       detail: attributeData
     }));
 
-    const expectedData = [{
-      number: 1,
-      attributes: [attributeData.id]
-    }];
+    // v3 format: nested structure with artian and gogma arrays
+    const expectedData = {
+      artian: [{
+        number: 1,
+        attributes: [attributeData.id]
+      }],
+      gogma: []
+    };
 
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
       'bow',
@@ -133,21 +143,22 @@ describe('Weapon Roll Tracker', () => {
       detail: mockAttributes[0]
     }));
 
-    // Get the last setItem call arguments
+    // Get the last setItem call arguments (v3 format)
     const lastCall = localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1];
     const storedData = JSON.parse(lastCall[1]);
-    
-    expect(storedData[0].attributes.length).toBe(5);
-    
-    // Try adding 6th attribute
+
+    // v3 format: data is under .artian property
+    expect(storedData.artian[0].attributes.length).toBe(5);
+
+    // Try adding 6th attribute - this starts a new roll in v3
     document.dispatchEvent(new CustomEvent('attributeSelected', {
       detail: mockAttributes[0]
     }));
 
-    // Verify it didn't add a 6th attribute
+    // Verify first roll still has exactly 5 attributes
     const finalCall = localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1];
     const finalData = JSON.parse(finalCall[1]);
-    expect(finalData[0].attributes.length).toBe(5);
+    expect(finalData.artian[0].attributes.length).toBe(5);
   });
 
   test('delete weapon data only affects selected weapon', () => {
