@@ -158,3 +158,114 @@ describe('Gogma Roll Logic', () => {
         expect(isComplete).toBe(false);
     });
 });
+
+describe('Import/Export with Nested Format', () => {
+    let localStorageMock;
+
+    beforeEach(() => {
+        localStorageMock = {
+            store: {},
+            getItem: jest.fn(key => localStorageMock.store[key] || null),
+            setItem: jest.fn((key, value) => localStorageMock.store[key] = value),
+            removeItem: jest.fn(key => delete localStorageMock.store[key]),
+            clear: jest.fn(() => localStorageMock.store = {}),
+            key: jest.fn(i => Object.keys(localStorageMock.store)[i])
+        };
+
+        Object.defineProperty(localStorageMock, 'length', {
+            get: function() { return Object.keys(this.store).length; }
+        });
+
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+        document.execCommand = jest.fn();
+
+        document.body.innerHTML = `
+            <div id="import-message" class="message"></div>
+            <textarea id="import-data"></textarea>
+            <button id="import-button">Import Data</button>
+            <button id="export-button">Export All Data</button>
+            <div class="export-output-container" style="display: none;">
+                <textarea id="export-data"></textarea>
+                <button id="copy-button">Copy to Clipboard</button>
+                <button id="download-button">Download as JSON</button>
+            </div>
+        `;
+
+        jest.resetModules();
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        document.body.innerHTML = '';
+    });
+
+    test('should import v3 nested format correctly', () => {
+        require('../../../src/scripts/import-export.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        const v3Data = {
+            bow: {
+                artian: [{ number: 1, attributes: ['attack-I'] }],
+                gogma: [{ number: 1, groupSkill: 'lords-soul', setBonus: 'gore-magala' }]
+            }
+        };
+
+        document.getElementById('import-data').value = JSON.stringify(v3Data);
+        document.getElementById('import-button').click();
+
+        const stored = JSON.parse(localStorageMock.store.bow);
+        expect(stored.artian[0].attributes).toEqual(['attack-I']);
+        expect(stored.gogma[0].groupSkill).toBe('lords-soul');
+    });
+
+    test('should migrate v2 flat format to v3 on import', () => {
+        require('../../../src/scripts/import-export.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        const v2Data = {
+            bow: [{ number: 1, attributes: ['attack-I', 'affinity-II'] }]
+        };
+
+        document.getElementById('import-data').value = JSON.stringify(v2Data);
+        document.getElementById('import-button').click();
+
+        const stored = JSON.parse(localStorageMock.store.bow);
+        expect(stored.artian[0].attributes).toEqual(['attack-I', 'affinity-II']);
+        expect(stored.gogma).toEqual([]);
+    });
+
+    test('should migrate v1 legacy format to v3 on import', () => {
+        require('../../../src/scripts/import-export.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        const v1Data = {
+            bow: [{ number: 1, attributes: ['attack', 'affinity'] }]
+        };
+
+        document.getElementById('import-data').value = JSON.stringify(v1Data);
+        document.getElementById('import-button').click();
+
+        const stored = JSON.parse(localStorageMock.store.bow);
+        expect(stored.artian[0].attributes).toEqual(['attack-I', 'affinity-I']);
+        expect(stored.gogma).toEqual([]);
+    });
+
+    test('should export in v3 nested format', () => {
+        localStorageMock.store = {
+            DATA_VERSION: '3',
+            bow: JSON.stringify({
+                artian: [{ number: 1, attributes: ['attack-I'] }],
+                gogma: [{ number: 1, groupSkill: 'lords-soul', setBonus: 'gore-magala' }]
+            })
+        };
+
+        require('../../../src/scripts/import-export.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        document.getElementById('export-button').click();
+
+        const exported = JSON.parse(document.getElementById('export-data').value);
+        expect(exported.bow.artian[0].attributes).toEqual(['attack-I']);
+        expect(exported.bow.gogma[0].groupSkill).toBe('lords-soul');
+    });
+});

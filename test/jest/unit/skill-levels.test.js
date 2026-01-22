@@ -322,9 +322,10 @@ describe('Import Migration', () => {
 
         document.getElementById('import-button').click();
 
-        // Check that data was migrated to new format
+        // Check that data was migrated to v3 nested format
         const storedData = JSON.parse(localStorageMock.store.bow);
-        expect(storedData[0].attributes).toEqual(['attack-I', 'affinity-I', 'sharpness-I']);
+        expect(storedData.artian[0].attributes).toEqual(['attack-I', 'affinity-I', 'sharpness-I']);
+        expect(storedData.gogma).toEqual([]);
     });
 
     test('should preserve new format on import', () => {
@@ -342,8 +343,10 @@ describe('Import Migration', () => {
 
         document.getElementById('import-button').click();
 
+        // Check that data was converted to v3 nested format
         const storedData = JSON.parse(localStorageMock.store.bow);
-        expect(storedData[0].attributes).toEqual(['attack-II', 'affinity-EX', 'sharpness-I']);
+        expect(storedData.artian[0].attributes).toEqual(['attack-II', 'affinity-EX', 'sharpness-I']);
+        expect(storedData.gogma).toEqual([]);
     });
 
     test('should handle mixed format on import', () => {
@@ -361,8 +364,10 @@ describe('Import Migration', () => {
 
         document.getElementById('import-button').click();
 
+        // Check that data was converted to v3 nested format with attribute migration
         const storedData = JSON.parse(localStorageMock.store.bow);
-        expect(storedData[0].attributes).toEqual(['attack-I', 'affinity-III', 'element-I', 'sharpness-EX']);
+        expect(storedData.artian[0].attributes).toEqual(['attack-I', 'affinity-III', 'element-I', 'sharpness-EX']);
+        expect(storedData.gogma).toEqual([]);
     });
 });
 
