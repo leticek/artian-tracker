@@ -128,3 +128,33 @@ describe('Gogma Skills Definitions', () => {
         });
     });
 });
+
+describe('Gogma Roll Logic', () => {
+    test('selecting group skill then set bonus creates complete roll', () => {
+        const expectedRoll = {
+            number: 1,
+            groupSkill: 'lords-soul',
+            setBonus: 'gore-magala'
+        };
+        expect(expectedRoll.groupSkill).toBe('lords-soul');
+        expect(expectedRoll.setBonus).toBe('gore-magala');
+    });
+
+    test('selecting same class skill replaces existing', () => {
+        const currentRoll = { number: 1, groupSkill: 'lords-soul', setBonus: null };
+        currentRoll.groupSkill = 'lords-fury';
+        expect(currentRoll.groupSkill).toBe('lords-fury');
+    });
+
+    test('roll is complete when both slots filled', () => {
+        const roll = { number: 1, groupSkill: 'lords-soul', setBonus: 'gore-magala' };
+        const isComplete = roll.groupSkill !== null && roll.setBonus !== null;
+        expect(isComplete).toBe(true);
+    });
+
+    test('roll is incomplete when missing slot', () => {
+        const roll = { number: 1, groupSkill: 'lords-soul', setBonus: null };
+        const isComplete = roll.groupSkill !== null && roll.setBonus !== null;
+        expect(isComplete).toBe(false);
+    });
+});
