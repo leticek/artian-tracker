@@ -1,5 +1,8 @@
 // Add this import at the top of main.js
-import { attributes } from './attributes.js';
+import { attributes, migrateAttributeId } from './attributes.js';
+
+// Data version for migration
+const DATA_VERSION = 2;
 
 // Add this helper function at the top of the file
 function getAttributeById(id) {
@@ -103,6 +106,34 @@ document.addEventListener('attributeSelected', (event) => {
         updateDisplay();
     }
 });
+
+// Migrate localStorage data from old format to new format with levels
+function migrateData() {
+    const currentVersion = parseInt(localStorage.getItem('DATA_VERSION') || '1');
+
+    if (currentVersion < DATA_VERSION) {
+        // Migrate from v1 (no levels) to v2 (with levels)
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key === 'DATA_VERSION') continue;
+
+            try {
+                const data = JSON.parse(localStorage.getItem(key));
+                if (Array.isArray(data)) {
+                    const migrated = data.map(roll => ({
+                        ...roll,
+                        attributes: roll.attributes.map(attr => migrateAttributeId(attr))
+                    }));
+                    localStorage.setItem(key, JSON.stringify(migrated));
+                }
+            } catch (e) {
+                console.warn(`Failed to migrate ${key}:`, e);
+            }
+        }
+    }
+
+    localStorage.setItem('DATA_VERSION', String(DATA_VERSION));
+}
 
 // Helper function to show error messages
 function showError(message) {
@@ -298,10 +329,14 @@ function createRollRow(roll) {
         if (attributeId) {
             const attribute = getAttributeById(attributeId);
             if (attribute) {
+                // Apply level-specific CSS class for coloring
+                if (attribute.cssClass) {
+                    cell.classList.add(attribute.cssClass);
+                }
                 const content = document.createElement('div');
                 content.className = 'attribute-content';
                 content.innerHTML = `
-                    <img src="${attribute.icon}" alt="${attribute.name}" 
+                    <img src="${attribute.icon}" alt="${attribute.name}"
                          onerror="this.style.display='none'">
                     <span>${attribute.name}</span>
                 `;
@@ -349,6 +384,9 @@ function saveIncompleteRoll() {
 
 // At the end of the file, wrap the delete button event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Run data migration first
+    migrateData();
+
     // Initialize the error message element reference
     errorMessageElement = document.getElementById('error-message');
 

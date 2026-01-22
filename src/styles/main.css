@@ -126,38 +126,44 @@ tr:last-child td {
 }
 
 #attribute-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
     max-width: 1200px;
     margin: 0 auto;
+}
+
+/* Attribute group - one row per skill */
+.attribute-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
 }
 
 .attribute-btn {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    padding: 0.8rem 1.5rem;
+    justify-content: center;
+    flex: 1;
+    padding: 0.3rem 0.6rem;
     border: 2px solid #ccc;
-    border-radius: 8px;
+    border-radius: 6px;
     background: #f5f5f5;
     cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    min-width: 0;
+    transition: all 0.2s ease;
 }
 
 .attribute-btn img {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;    
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
 }
 
 .attribute-btn span {
-    font-size: 0.9rem;
-    margin-left: 1rem;  
-    white-space: nowrap; 
+    font-size: 0.85rem;
+    margin-left: 0.4rem;
+    white-space: nowrap;
 }
 
 .attribute-cell {
@@ -196,6 +202,69 @@ tr:last-child td {
 
 .attribute-content span {
     font-size: 0.9rem;
+}
+
+/* Skill Level Colors */
+/* Level I - Blue */
+.attribute-btn.level-I {
+    background-color: #e3f2fd;
+    border-color: #2196F3;
+}
+.attribute-btn.level-I:hover {
+    background-color: #bbdefb;
+}
+.attribute-btn.level-I span {
+    color: #1565C0;
+}
+
+/* Level II - Green */
+.attribute-btn.level-II {
+    background-color: #e8f5e9;
+    border-color: #4CAF50;
+}
+.attribute-btn.level-II:hover {
+    background-color: #c8e6c9;
+}
+.attribute-btn.level-II span {
+    color: #2E7D32;
+}
+
+/* Level III - Orange */
+.attribute-btn.level-III {
+    background-color: #fff3e0;
+    border-color: #FF9800;
+}
+.attribute-btn.level-III:hover {
+    background-color: #ffe0b2;
+}
+.attribute-btn.level-III span {
+    color: #E65100;
+}
+
+/* Level EX - Pink */
+.attribute-btn.level-EX {
+    background-color: #fce4ec;
+    border-color: #E91E63;
+}
+.attribute-btn.level-EX:hover {
+    background-color: #f8bbd9;
+}
+.attribute-btn.level-EX span {
+    color: #880E4F;
+}
+
+/* Cell level colors */
+.attribute-cell.level-I {
+    background-color: #e3f2fd;
+}
+.attribute-cell.level-II {
+    background-color: #e8f5e9;
+}
+.attribute-cell.level-III {
+    background-color: #fff3e0;
+}
+.attribute-cell.level-EX {
+    background-color: #fce4ec;
 }
 
 @keyframes pulseRed {

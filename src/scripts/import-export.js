@@ -1,3 +1,25 @@
+import { migrateAttributeId } from './attributes.js';
+
+// Migrate imported data to current format with levels
+function migrateImportedData(data) {
+    const result = {};
+
+    Object.keys(data).forEach(weaponId => {
+        const weaponData = data[weaponId];
+
+        if (Array.isArray(weaponData)) {
+            result[weaponId] = weaponData.map(roll => ({
+                ...roll,
+                attributes: roll.attributes.map(attr => migrateAttributeId(attr))
+            }));
+        } else {
+            result[weaponId] = weaponData;
+        }
+    });
+
+    return result;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const importButton = document.getElementById('import-button');
     const exportButton = document.getElementById('export-button');
@@ -26,12 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleImport() {
         try {
-            const dataToImport = JSON.parse(importData.value);
-            
+            let dataToImport = JSON.parse(importData.value);
+
             if (!dataToImport || typeof dataToImport !== 'object') {
                 showImportMessage('Invalid JSON data format. Please check your input.', 'error');
                 return;
             }
+
+            // Migrate imported data to current format with levels
+            dataToImport = migrateImportedData(dataToImport);
 
             let importedCount = 0;
             let skippedCount = 0;
